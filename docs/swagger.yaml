@@ -1,0 +1,27 @@
+info:
+  contact: {}
+paths:
+  /api/v1/languages:
+    get:
+      consumes:
+      - application/json
+      description: 获取支持的语言列表，只有在该列表中的语言代码才能运行
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: bad request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 获取支持的语言列表
+      tags:
+      - Code
+swagger: "2.0"
