@@ -8,8 +8,6 @@ import (
 
 var (
 	Config ServerConfig
-	Dev    bool //是否开发环境
-	Debug  bool // 是否Debug模式
 )
 
 func init() {
@@ -22,16 +20,10 @@ func init() {
 		file, err = os.ReadFile("./conf/config.yaml")
 	}
 	if err != nil {
-		panic(fmt.Sprintf("配置文件读取错误，请检查文件路径--%v", err))
+		panic(fmt.Sprintf("配置文件读取错误，请检查文件路径--%v1", err))
 	}
 	err = yaml.Unmarshal(file, &Config)
 	if err != nil {
-		panic(fmt.Sprintf("配置流解析错误，请检查：%v", err))
-	}
-	if Config.Server.AppMode == "development" {
-		Dev = true
-	}
-	if Config.Log.Level == "debug" {
-		Debug = true
+		panic(fmt.Sprintf("配置流解析错误，请检查：%v1", err))
 	}
 }

@@ -1,52 +1,99 @@
 package log
 
 import (
+	"bytes"
 	"codeSandbox/utils"
-	"codeSandbox/utils/middleware"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/natefinch/lumberjack"
-	log "github.com/sirupsen/logrus"
+	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
+	"path"
+	"path/filepath"
+	"time"
 )
 
-func Starter() {
+type MyFormatter struct{}
 
-	formatter := log.TextFormatter{
-		ForceColors:               true,
-		EnvironmentOverrideColors: true,
-		TimestampFormat:           "2006-01-02 15:04:05",
-		FullTimestamp:             true,
-		DisableQuote:              true,
+// 配置日志切割
+// LogFileCut 日志文件切割
+func LogFileCut(fileName string) *rotatelogs.RotateLogs {
+	logier, err := rotatelogs.New(
+		// 切割后日志文件名称
+		fileName,
+		rotatelogs.WithMaxAge(30*24*time.Hour),    // 文件最大保存时间
+		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
+	)
+
+	if err != nil {
+		panic(err)
 	}
-	log.SetFormatter(&formatter)
-	logConf := utils.Config.Log
-	if utils.Dev {
-		log.SetLevel(log.DebugLevel)
+	lfHook := lfshook.NewHook(lfshook.WriterMap{
+		logrus.InfoLevel:  logier,
+		logrus.FatalLevel: logier,
+		logrus.DebugLevel: logier,
+		logrus.WarnLevel:  logier,
+		logrus.ErrorLevel: logier,
+		logrus.PanicLevel: logier,
+	},
+		// 设置分割日志样式
+		&MyFormatter{})
+	logrus.AddHook(lfHook)
+	return logier
+}
+
+func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var b *bytes.Buffer
+	if entry.Buffer != nil {
+		b = entry.Buffer
 	} else {
-		level, err := log.ParseLevel(logConf.Level)
-		if err != nil {
-			panic(fmt.Sprintf("错误的日志等级,可用的[panic,fatal,error,warn,info,debug,trace],%v", err))
-		}
-		log.SetLevel(level)
+		b = &bytes.Buffer{}
 	}
-	if utils.Debug {
-		log.SetReportCaller(true)
+
+	timestamp := entry.Time.Format("2006-01-02 15:04:05")
+	var newLog string
+
+	//HasCaller()为true才会有调用信息
+	if entry.HasCaller() {
+		fName := filepath.Base(entry.Caller.File)
+		newLog = fmt.Sprintf("[codeSandbox-app] [%s] [%s] [%s:%d] [msg=%s]\n",
+			timestamp, entry.Level, fName, entry.Caller.Line, entry.Message)
+	} else {
+		newLog = fmt.Sprintf("[codeSandbox-app] [%s] [%s] [msg=%s]\n", timestamp, entry.Level, entry.Message)
 	}
-	if logConf.Enable {
-		var w io.Writer = &lumberjack.Logger{
-			Filename:   logConf.Filename,
-			MaxSize:    logConf.MaxSize,
-			MaxBackups: logConf.MaxBackups,
-			MaxAge:     logConf.MaxAge,
-			Compress:   logConf.Compress,
-		}
-		if utils.Dev || utils.Debug {
-			w = io.MultiWriter(os.Stdout, w)
-		}
-		log.SetOutput(w)
+
+	b.WriteString(newLog)
+	return b.Bytes(), nil
+}
+
+func ConfigLog() {
+	serverConf := utils.Config.Server
+	appMode := serverConf.AppMode
+
+	os.MkdirAll("log", 0755)
+	logrus.SetReportCaller(true)
+	// 设置日志输出控制台样式
+	logrus.SetFormatter(&MyFormatter{})
+	// 按天分割
+	var logFileName string
+	if appMode == "dev" {
+		logFileName = path.Join("log", "codeSandbox") + ".%Y%m%d_dev.log"
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logFileName = path.Join("log", "codeSandbox") + ".%Y%m%d_prod.log"
+		logrus.SetLevel(logrus.InfoLevel)
 	}
-	gin.DebugPrintRouteFunc = middleware.LoggerDebug
-	log.Debug("init logrus success!")
+	// 配置日志分割
+	logFileCut := LogFileCut(logFileName)
+	writers := []io.Writer{
+		logFileCut,
+		os.Stdout}
+
+	// 输出到控制台，方便定位到那个文件
+	fileAndStdoutWriter := io.MultiWriter(writers...)
+	gin.DefaultWriter = fileAndStdoutWriter
+
+	logrus.Info("init log end")
 }

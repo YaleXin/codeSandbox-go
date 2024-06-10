@@ -1,9 +1,7 @@
 package utils
 
 type ServerConfig struct {
-	Server   Server   `yaml:"Server"`
-	Log      Log      `yaml:"Log"`
-	SiteInfo SiteInfo `yaml:"SiteInfo"`
+	Server Server `yaml:"Server"`
 }
 type Server struct {
 	AppMode  string   `yaml:"AppMode"`
@@ -60,22 +58,4 @@ type Email struct {
 	From     string `yaml:"From,omitempty"`
 	Host     string `yaml:"Host,omitempty"`
 	Port     string `yaml:"Port,omitempty"`
-}
-type Log struct {
-	Enable     bool   `yaml:"Enable,omitempty"`
-	Level      string `yaml:"Level,omitempty"`
-	Filename   string `yaml:"Filename,omitempty"`
-	MaxSize    int    `yaml:"Maxsize,omitempty"`
-	MaxAge     int    `yaml:"Maxage,omitempty"`
-	MaxBackups int    `yaml:"Maxbackups,omitempty"`
-	Compress   bool   `yaml:"Compress,omitempty"`
-}
-
-type SiteInfo struct {
-	URL              string `yaml:"Url"`
-	Name             string `yaml:"Name"`
-	User             string `yaml:"User"`
-	Email            string `yaml:"Email"`
-	Desc             string `yaml:"Desc"`
-	ConstructionTime int64  `yaml:"ConstructionTime"`
 }

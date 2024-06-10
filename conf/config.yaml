@@ -1,6 +1,6 @@
 Server:
-  # development 开发模式 production 生产模式
-  AppMode: development
+  # dev 开发模式 prod 生产模式
+  AppMode: dev
   Host: localhost
   Port: 8080
   # Jwt加密秘钥
@@ -48,32 +48,3 @@ Server:
       To:
       Host: smtp.qq.com
       Port: 25
-
-Log:
-  # 是否启用
-  Enable: true
-  # 日志等级 生产环境推荐 warn
-  Level: warn
-  # 日志文件名
-  Filename: log/log.log
-  # 最大大小
-  MaxSize: 2
-  # 最长时间
-  MaxAge: 28
-  # 最大备份
-  MaxBackups: 5
-  # 是否压缩
-  Compress: false
-SiteInfo:
-  # 网址带 http,用于生成站点地图
-  Url: https://ocyss.icu
-  # 博客名
-  Name: 💘  Ocyss 的博客
-  # 博主名
-  User: Ocyss
-  # 邮箱地址
-  Email: qiudie@88.com
-  # 博客描述
-  Desc: 故事很短，满是遗憾。
-  # 建站时间 秒级时间戳 2022-09-07T12:39:08+08:00
-  ConstructionTime: 1662525548

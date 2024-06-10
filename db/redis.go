@@ -23,7 +23,7 @@ func InitRedis() {
 	_, err := Rdb.Ping(ctx).Result()
 	//fmt.Println(pong, err)
 	if err != nil {
-		log.Panic(fmt.Sprintf("连接redis出错，错误信息：%v", err))
+		log.Panic(fmt.Sprintf("连接redis出错，错误信息：%v1", err))
 	}
 	// 开发环境，清空缓存
 	//if utils.IsDev() {

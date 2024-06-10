@@ -3,9 +3,7 @@ package middleware
 import (
 	"codeSandbox/utils"
 	"codeSandbox/utils/errmsg"
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"net/http"
 	"time"
 )
 
@@ -56,6 +54,7 @@ func CheckToken(token string) (*MyClaims, int) {
 
 // JwtToken jwt中间件
 // 参数： termination 是否中断(true:没权限直接静止访问,false:没权限只返回部分字段)
+/*
 func JwtToken(termination bool, role int) gin.HandlerFunc {
 	cRes := func(c *gin.Context, code int) {
 		if termination {
@@ -99,3 +98,4 @@ func JwtToken(termination bool, role int) gin.HandlerFunc {
 		c.Next()
 	}
 }
+*/

@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	log.Starter()
+	log.ConfigLog()
 	routes.Starter()
 }
