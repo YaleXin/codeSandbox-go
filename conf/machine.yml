@@ -1,0 +1,21 @@
+DockerInfoList:
+  - Language: Java
+    ImageName: Main.java
+    Filename: openjdk:8-alpine
+    CompileCmd: "javac Main.java -encoding utf-8"
+    RunCmd: "java Main"
+  - Language: C
+    ImageName: Main.c
+    Filename: gcc:6.3.0
+    CompileCmd: "gcc Main.c -o Main"
+    RunCmd: "./Main"
+  - Language: Python
+    ImageName: python:3.9
+    Filename: Main.py
+    CompileCmd: "echo python"
+    RunCmd: "python Main.py"
+  - Language: Go
+    ImageName: Main.go
+    Filename: go:1.21
+    CompileCmd: "go build Main.go"
+    RunCmd: "./main"
