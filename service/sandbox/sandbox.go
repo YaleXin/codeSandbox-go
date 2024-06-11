@@ -15,8 +15,12 @@ type SandBox struct {
 	DockerInfo dto.DockerInfo
 }
 
-func clearFile(codeFile fs.File) {
-
+func clearFile(codeFilename string) {
+	err := os.Remove(codeFilename)
+	if err != nil {
+		log.Errorf("Remove code file fail:%v", err)
+	}
+	log.Debugf("clear file finish, codeFilename:%v", codeFilename)
 }
 func getOutputResponse(executeMessageArrayList []dto.ExecuteMessage) dto.ExecuteCodeResponse {
 	return dto.ExecuteCodeResponse{}
@@ -25,7 +29,7 @@ func compileAndRun(language string, userCodeFile fs.File, inputList []string) []
 	return nil
 }
 
-func (sandbox *SandBox) saveFile(code string) fs.File {
+func (sandbox *SandBox) saveFile(code string) (fs.File, string) {
 	// 不同的编程语言将会保存到不同的地方
 	language := sandbox.DockerInfo.Language
 	filename := sandbox.DockerInfo.Filename
@@ -34,18 +38,19 @@ func (sandbox *SandBox) saveFile(code string) fs.File {
 	err := os.MkdirAll(parentPath, 0666)
 	if err != nil {
 		log.Errorf("MkdirAll %v fail:%v", parentPath, err)
-		return nil
+		return nil, ""
 	}
 	newUUID, err := uuid.NewRandom()
 	if err != nil {
 		log.Errorf("Gennerate UUID fail: %v", err)
-		return nil
+		return nil, ""
 	}
 	codeFilename := parentPath + string(filepath.Separator) + newUUID.String() + "_" + filename
-	file, err := os.OpenFile(codeFilename, os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_TRUNC, 0666)
+	// O_WRONLY 以只写的模式打开文件, O_CREATE 如果文件不存在则创建文件
+	file, err := os.OpenFile(codeFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Errorf("OpenFile %v fail: %v", codeFilename, err)
-		return nil
+		return nil, ""
 	}
 	defer func(file *os.File) {
 		err := file.Close()
@@ -56,15 +61,16 @@ func (sandbox *SandBox) saveFile(code string) fs.File {
 	_, err = file.WriteString(code)
 	if err != nil {
 		log.Errorf("WriteString fail: %v", err)
-		return nil
+		return nil, ""
 	}
-	return file
+	log.Debugf("save file finish, file:%v, codeFilename:%v", file, codeFilename)
+	return file, codeFilename
 }
 
 func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) dto.ExecuteCodeResponse {
 	// 1. 保存用户代码为文件
 	code := executeCodeRequest.Code
-	codeFile := sandbox.saveFile(code)
+	codeFile, codeFilename := sandbox.saveFile(code)
 	// 2. 编译代码并执行代码
 	language := executeCodeRequest.Language
 	inputList := executeCodeRequest.InputList
@@ -72,6 +78,6 @@ func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) 
 	// 3. 整理输出信息
 	executeCodeResponse := getOutputResponse(executeMessageArrayList)
 	// 4. 文件清理
-	clearFile(codeFile)
+	defer clearFile(codeFilename)
 	return executeCodeResponse
 }
