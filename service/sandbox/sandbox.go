@@ -2,8 +2,12 @@ package sandbox
 
 import (
 	"codeSandbox/model/dto"
+	"codeSandbox/utils"
+	"fmt"
+	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -12,9 +16,29 @@ import (
 const CODE_DIR_PREX string = "temp"
 
 type SandBox struct {
-	DockerInfo dto.DockerInfo
+	DockerInfo utils.DockerInfo
 }
 
+var DockerClient *client.Client
+
+func init() {
+	docker, err := connectDocker()
+	if err != nil {
+		log.Panicf("init docker fail:%v", err)
+		return
+	}
+	DockerClient = docker
+}
+func connectDocker() (cli *client.Client, err error) {
+	dockerConfig := utils.Config.SandboxMachine
+
+	cli, err = client.NewClientWithOpts(client.WithAPIVersionNegotiation(), client.WithHost(fmt.Sprintf("tcp://%v:%v", dockerConfig.Host, dockerConfig.Port)))
+	if err != nil {
+		return nil, err
+	}
+
+	return cli, nil
+}
 func clearFile(codeFilename string) {
 	err := os.Remove(codeFilename)
 	if err != nil {

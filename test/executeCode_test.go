@@ -2,12 +2,14 @@ package test
 
 import (
 	"codeSandbox/model/dto"
-	sandbox "codeSandbox/service/sandbox"
+	"codeSandbox/service/sandbox"
+	"codeSandbox/utils"
 	"github.com/sirupsen/logrus"
 	"testing"
 )
 
 func TestExecuteCode(t *testing.T) {
+
 	// 在测试开始前设置日志级别
 	logrus.SetLevel(logrus.DebugLevel)
 	codeRequest := dto.ExecuteCodeRequest{
@@ -16,7 +18,7 @@ func TestExecuteCode(t *testing.T) {
 		InputList: []string{"1", "2", "2"},
 	}
 	sandbox := sandbox.SandBox{
-		DockerInfo: dto.DockerInfo{
+		DockerInfo: utils.DockerInfo{
 			Language:   "Go",
 			ImageName:  "go:1.21",
 			Filename:   "Main.go",
@@ -26,4 +28,5 @@ func TestExecuteCode(t *testing.T) {
 	}
 	sandbox.ExecuteCode(&codeRequest)
 	t.Log("test finish")
+	
 }

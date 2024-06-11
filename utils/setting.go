@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -10,6 +10,7 @@ var (
 	Config ServerConfig
 )
 
+// 全局唯一一个 config 变量
 func init() {
 	var file []byte
 	var err error
@@ -17,13 +18,13 @@ func init() {
 	if filename, ok := os.LookupEnv("CodeSandboxConfigFileName"); ok {
 		file, err = os.ReadFile(filename)
 	} else {
-		file, err = os.ReadFile("./conf/config.yaml")
+		file, err = os.ReadFile("./conf/config.yml")
 	}
 	if err != nil {
-		panic(fmt.Sprintf("配置文件读取错误，请检查文件路径--%v1", err))
+		log.Panicf("config file read fail : %v", err)
 	}
 	err = yaml.Unmarshal(file, &Config)
 	if err != nil {
-		panic(fmt.Sprintf("配置流解析错误，请检查：%v1", err))
+		log.Panicf("config file parse fail : %v", err)
 	}
 }
