@@ -10,3 +10,4 @@ gen
 *.cache
 /log/
 /Log/
+**/temp/**
