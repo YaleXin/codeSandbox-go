@@ -15,7 +15,7 @@ DockerInfoList:
     CompileCmd: "echo python"
     RunCmd: "python Main.py"
   - Language: Go
-    ImageName: Main.go
-    Filename: go:1.21
+    ImageName: go:1.21
+    Filename: Main.go
     CompileCmd: "go build Main.go"
     RunCmd: "./main"
