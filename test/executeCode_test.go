@@ -24,7 +24,7 @@ func TestExecuteCode(t *testing.T) {
 			Filename:       "Main.go",
 			CompileCmd:     "go build Main.go",
 			RunCmd:         "./main",
-			ContainerCount: 3,
+			ContainerCount: 1,
 		},
 	}
 	runRes := sandbox.ExecuteCode(&codeRequest)
