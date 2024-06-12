@@ -40,7 +40,7 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) {
 	tarFilePath := "main.tar"
 	destFilePath := WORDING_DIR + string(filepath.Separator) + uuid
 
-	runCmdByContainer(containerId, []string{"mkdir", "-p", uuid})
+	runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "")
 
 	// 将代码文件打包为 main.tar
 	err := filesUtils.CreateTarArchiveFiles(sourceFiles, tarFilePath)
@@ -78,13 +78,15 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	//====== 编译文件
 	compileCmd := dockerInfo.CompileCmd
 	cmdSplit := strings.Split(compileCmd, " ")
-	compileRes := runCmdByContainer(containerId, cmdSplit)
+	// Linux系统下，路径分隔符必然为 /
+	workDir := WORDING_DIR + "/" + uuid
+	compileRes := runCmdByContainer(containerId, cmdSplit, workDir)
 	log.Infof("compileRes:%v", compileRes)
 
 	//====== 运行代码
 	runCmd := dockerInfo.RunCmd
 	runSplit := strings.Split(runCmd, " ")
-	runRes := runCmdByContainer(containerId, runSplit)
+	runRes := runCmdByContainer(containerId, runSplit, "")
 
 	messages := make([]dto.ExecuteMessage, 0, 0)
 	messages = append(messages, dto.ExecuteMessage{

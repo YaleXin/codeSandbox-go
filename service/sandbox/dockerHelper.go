@@ -64,16 +64,22 @@ func getContainerId(dockerInfo utils.DockerInfo, idx int) string {
 	}
 	return containerId
 }
-func runCmdByContainer(containerId string, cmd []string) string {
+
+// 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
+func runCmdByContainer(containerId string, cmd []string, workDir string) string {
 	ctx := context.Background()
 	// 创建执行命令实例
-	resp, err := DockerClient.ContainerExecCreate(ctx, containerId, types.ExecConfig{
+	execConfig := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
 		AttachStdin:  false,
 		Tty:          false,
 		Cmd:          cmd,
-	})
+	}
+	if workDir != "" {
+		execConfig.WorkingDir = workDir
+	}
+	resp, err := DockerClient.ContainerExecCreate(ctx, containerId, execConfig)
 	if err != nil {
 		log.Panicf("ContainerExecCreate fail:%v", err)
 	}
