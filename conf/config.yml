@@ -54,21 +54,25 @@ SandboxMachine:
 DockerInfoList:
   - Language: Java
     ImageName: openjdk:8-alpine
+    ContainerCount: 2
     Filename: Main.java
     CompileCmd: "javac Main.java -encoding utf-8"
     RunCmd: "java Main"
   - Language: C
     ImageName: gcc:6.3.0
+    ContainerCount: 2
     Filename: Main.c
     CompileCmd: "gcc Main.c -o Main"
     RunCmd: "./Main"
   - Language: Python
     ImageName: python:3.9
+    ContainerCount: 2
     Filename: Main.py
     CompileCmd: "echo python"
     RunCmd: "python Main.py"
   - Language: Go
     ImageName: golang:1.17
+    ContainerCount: 3
     Filename: Main.go
     CompileCmd: "go build Main.go"
     RunCmd: "./main"

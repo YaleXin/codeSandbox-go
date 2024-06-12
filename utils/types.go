@@ -12,6 +12,8 @@ type DockerInfo struct {
 	Language string `yaml:"Language"`
 	// 对应的镜像
 	ImageName string `yaml:"ImageName"`
+	// 容器数量
+	ContainerCount int `yaml:"ContainerCount"`
 	// 保存的代码文件名
 	Filename string `yaml:"Filename"`
 	// 编译命令

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	// 初始化 docker 相关信息
+	_ "codeSandbox/service/sandbox"
 )
 
 func Starter() {
