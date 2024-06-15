@@ -34,15 +34,17 @@ func getOutputResponse(executeMessageArrayList []dto.ExecuteMessage) dto.Execute
 	return response
 }
 
-func copyFileToContainer(containerId, userCodeFilePath, uuid string) {
+func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
 	//======== 容器中先创建文件夹，然后本地打包文件上传至文件夹
 	ctx := context.Background()
 	sourceFiles := []string{userCodeFilePath}
 	tarFilePath := "main.tar"
 	destFilePath := WORDING_DIR + string(filepath.Separator) + uuid
 
-	runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "")
-
+	message := runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "")
+	if message.ExitCode == EXIT_CODE_ERROR {
+		return false
+	}
 	// 将代码文件打包为 main.tar
 	err := filesUtils.CreateTarArchiveFiles(sourceFiles, tarFilePath)
 	if err != nil {
@@ -57,7 +59,9 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) {
 	})
 	if err != nil {
 		log.Errorf("copy to containerId:%v fail:%v", containerId, err)
+		return false
 	}
+	return true
 }
 
 // 将本地文件保存到容器中，并编译运行
@@ -74,7 +78,13 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	//======== 复制文件（先打包文件，再复制到容器中）
 	// 对于 temp\Go\81b6f397-a185-4ef2-b3c4-908c3ad4d20c\Main.go uuid = 81b6f397-a185-4ef2-b3c4-908c3ad4d20c
 	uuid := filepath.Base(filepath.Dir(userCodeFilePath))
-	copyFileToContainer(containerId, userCodeFilePath, uuid)
+	copyStatus := copyFileToContainer(containerId, userCodeFilePath, uuid)
+	if !copyStatus {
+		return []dto.ExecuteMessage{{
+			ExitCode:     EXIT_CODE_ERROR,
+			ErrorMessage: "System error",
+		}}
+	}
 
 	//====== 编译文件
 	compileCmd := dockerInfo.CompileCmd
@@ -83,6 +93,10 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	workDir := WORDING_DIR + "/" + uuid
 	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "")
 	log.Infof("compileRes:%v", compileRes)
+	if compileRes.ExitCode == EXIT_CODE_ERROR {
+		compileRes.ErrorMessage = "Compile fail"
+		return []dto.ExecuteMessage{compileRes}
+	}
 
 	//====== 运行代码
 	messages := runCode(containerId, dockerInfo, inputList, workDir)
@@ -96,13 +110,7 @@ func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []st
 	runSplit := strings.Split(runCmd, " ")
 	for _, inputStr := range inputList {
 		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr)
-		messages = append(messages, dto.ExecuteMessage{
-			ExitCode:     0,
-			Message:      runRes,
-			ErrorMessage: "",
-			TimeCost:     0,
-			MemoryCost:   0,
-		})
+		messages = append(messages, runRes)
 	}
 	return messages
 }

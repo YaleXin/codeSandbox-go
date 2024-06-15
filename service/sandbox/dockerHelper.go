@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"bytes"
+	"codeSandbox/model/dto"
 	"codeSandbox/utils"
 	"context"
 	"fmt"
@@ -19,6 +20,14 @@ import (
 
 const CONTAINER_PREFIX string = "codeSandbox"
 const WORDING_DIR string = "/codeSandbox"
+
+// 代码沙箱执行过程的退出码
+const (
+	// 正常退出
+	EXIT_CODE_OK = iota
+	// 异常退出
+	EXIT_CODE_ERROR
+)
 
 var DockerClient *client.Client
 
@@ -66,7 +75,9 @@ func getContainerId(dockerInfo utils.DockerInfo, idx int) string {
 }
 
 // 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
-func runCmdByContainer(containerId string, cmd []string, workDir string, input string) string {
+func runCmdByContainer(containerId string, cmd []string, workDir string, input string) dto.ExecuteMessage {
+	message := dto.ExecuteMessage{}
+	message.ExitCode = EXIT_CODE_ERROR
 	ctx := context.Background()
 	// 创建执行命令实例
 	execConfig := types.ExecConfig{
@@ -81,14 +92,20 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	}
 	resp, err := DockerClient.ContainerExecCreate(ctx, containerId, execConfig)
 	if err != nil {
-		log.Panicf("ContainerExecCreate fail:%v", err)
+		errMsg := fmt.Sprintf("ContainerExecCreate fail:%v", err)
+		log.Panicf(errMsg)
+		message.ErrorMessage = errMsg
+		return message
 	}
 
 	// 启动执行命令并连接到输入输出流
 	execID := resp.ID
 	execAttachResp, err := DockerClient.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
 	if err != nil {
-		panic(err)
+		errMsg := fmt.Sprintf("ContainerExecAttach fail:%v{}", err)
+		log.Panicf(errMsg)
+		message.ErrorMessage = errMsg
+		return message
 	}
 	defer execAttachResp.Close()
 
@@ -100,7 +117,10 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 
 		write, err := conn.Write([]byte(input))
 		if err != nil {
-			log.Errorf("Write fail:%v\n", err)
+			errMsg := fmt.Sprintf("Write fail:%v{}", err)
+			log.Panicf(errMsg)
+			message.ErrorMessage = errMsg
+			return message
 		}
 		log.Debugf("write:%v", write)
 	}
@@ -111,13 +131,18 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	// 将conn中的数据复制到buf中
 	_, err = io.Copy(&buf, conn)
 	if err != nil {
-		panic(err)
+		errMsg := fmt.Sprintf("io.Copy fail:%v", err)
+		log.Panicf(errMsg)
+		message.ErrorMessage = errMsg
+		return message
 	}
 
 	resultStr := buf.String()
 	fmt.Printf("stdout:%v", resultStr)
 	log.Debugf("STDOUT:%v", resultStr)
-	return resultStr
+	message.ExitCode = EXIT_CODE_OK
+	message.Message = resultStr
+	return message
 }
 
 func createContainer(dockerInfo *utils.DockerInfo, containerName string) string {
