@@ -109,13 +109,13 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	}
 	defer execAttachResp.Close()
 
-	conn := execAttachResp.Conn
-	defer conn.Close()
+	hijackedResp := execAttachResp.Conn
+	defer hijackedResp.Close()
 
 	// 向输入流中写入数据
 	if input != "" {
 
-		write, err := conn.Write([]byte(input))
+		write, err := hijackedResp.Write([]byte(input))
 		if err != nil {
 			errMsg := fmt.Sprintf("Write fail:%v{}", err)
 			log.Panicf(errMsg)
@@ -125,24 +125,32 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 		log.Debugf("write:%v", write)
 	}
 
+	// 设置超时
+	ctx, cancel := context.WithTimeout(context.Background(), RUN_CODE_TIME_OUT)
+	defer cancel()
+
 	// 创建一个bytes.Buffer实例用于接收输出
 	var buf bytes.Buffer
-
-	// 将conn中的数据复制到buf中
-	_, err = io.Copy(&buf, conn)
-	if err != nil {
-		errMsg := fmt.Sprintf("io.Copy fail:%v", err)
-		log.Panicf(errMsg)
-		message.ErrorMessage = errMsg
+	chDone := make(chan struct{})
+	go func() {
+		defer close(chDone)
+		// 将 hijackedResp 中的数据复制到buf中
+		_, err = io.Copy(&buf, hijackedResp)
+	}()
+	select {
+	// 在规定时间内完成
+	case <-chDone:
+		resultStr := buf.String()
+		message.ExitCode = EXIT_CODE_OK
+		message.Message = resultStr
+		return message
+		// 超时完成
+	case <-ctx.Done():
+		message.ExitCode = EXIT_CODE_ERROR
+		message.ErrorMessage = "Timout"
 		return message
 	}
 
-	resultStr := buf.String()
-	fmt.Printf("stdout:%v", resultStr)
-	log.Debugf("STDOUT:%v", resultStr)
-	message.ExitCode = EXIT_CODE_OK
-	message.Message = resultStr
-	return message
 }
 
 func createContainer(dockerInfo *utils.DockerInfo, containerName string) string {
