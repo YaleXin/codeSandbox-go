@@ -15,7 +15,7 @@ func TestExecuteCode(t *testing.T) {
 	codeRequest := dto.ExecuteCodeRequest{
 		Code:      "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\tfmt.Println(a + b)\n}",
 		Language:  "Go",
-		InputList: []string{"8", "2"},
+		InputList: []string{"8 9 \n", "2 2 \n", "22 33 \n"},
 	}
 	sandbox := sandbox.SandBox{
 		DockerInfo: utils.DockerInfo{
@@ -23,7 +23,7 @@ func TestExecuteCode(t *testing.T) {
 			ImageName:      "golang:1.17",
 			Filename:       "Main.go",
 			CompileCmd:     "go build Main.go",
-			RunCmd:         "./main",
+			RunCmd:         "./Main",
 			ContainerCount: 1,
 		},
 	}

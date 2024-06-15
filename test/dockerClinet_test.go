@@ -66,7 +66,8 @@ func getImageList(cli *client.Client) error {
 
 func TestRunCmd(t *testing.T) {
 	//logrus.SetLevel(logrus.DebugLevel)
-	//containerId := "7634b7988b"
-	//runCmdByContainer := sandbox.runCmdByContainer(containerId, []string{"ls", "-l"}, "/tmp")
+	//containerId := "3d4b12914099"
+
+	//runCmdByContainer := sandbox.runCmdByContainer(containerId, []string{"./Main"}, "/tmp")
 	//logrus.Debugf("runCmdByContainer: %v", runCmdByContainer)
 }

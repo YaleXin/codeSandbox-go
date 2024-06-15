@@ -66,13 +66,13 @@ func getContainerId(dockerInfo utils.DockerInfo, idx int) string {
 }
 
 // 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
-func runCmdByContainer(containerId string, cmd []string, workDir string) string {
+func runCmdByContainer(containerId string, cmd []string, workDir string, input string) string {
 	ctx := context.Background()
 	// 创建执行命令实例
 	execConfig := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
-		AttachStdin:  false,
+		AttachStdin:  true,
 		Tty:          false,
 		Cmd:          cmd,
 	}
@@ -84,29 +84,40 @@ func runCmdByContainer(containerId string, cmd []string, workDir string) string 
 		log.Panicf("ContainerExecCreate fail:%v", err)
 	}
 
-	// 启动执行命令并连接到输出流
+	// 启动执行命令并连接到输入输出流
 	execID := resp.ID
-	respAttach, err := DockerClient.ContainerExecAttach(context.Background(), execID, types.ExecStartCheck{})
+	execAttachResp, err := DockerClient.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
 	if err != nil {
-		log.Panicf("ContainerExecAttach fail: %v", err)
+		panic(err)
 	}
-	defer respAttach.Close()
-	var stdoutBuf bytes.Buffer
-	var wg sync.WaitGroup
-	wg.Add(1)
+	defer execAttachResp.Close()
 
-	go func() {
-		defer wg.Done()
-		io.Copy(&stdoutBuf, respAttach.Reader)
-	}()
+	conn := execAttachResp.Conn
+	defer conn.Close()
 
-	// 等待goroutines完成
-	wg.Wait()
-	// 将读取的内容转换为字符串
-	stdoutStr := stdoutBuf.String()
-	log.Debugf("STDOUT:", stdoutStr)
+	// 向输入流中写入数据
+	if input != "" {
 
-	return stdoutStr
+		write, err := conn.Write([]byte(input))
+		if err != nil {
+			log.Errorf("Write fail:%v\n", err)
+		}
+		log.Debugf("write:%v", write)
+	}
+
+	// 创建一个bytes.Buffer实例用于接收输出
+	var buf bytes.Buffer
+
+	// 将conn中的数据复制到buf中
+	_, err = io.Copy(&buf, conn)
+	if err != nil {
+		panic(err)
+	}
+
+	resultStr := buf.String()
+	fmt.Printf("stdout:%v", resultStr)
+	log.Debugf("STDOUT:%v", resultStr)
+	return resultStr
 }
 
 func createContainer(dockerInfo *utils.DockerInfo, containerName string) string {

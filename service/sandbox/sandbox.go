@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"codeSandbox/model/dto"
+	utilsType "codeSandbox/utils"
 	filesUtils "codeSandbox/utils/files"
 	"context"
 	"github.com/docker/docker/api/types"
@@ -40,7 +41,7 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) {
 	tarFilePath := "main.tar"
 	destFilePath := WORDING_DIR + string(filepath.Separator) + uuid
 
-	runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "")
+	runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "")
 
 	// 将代码文件打包为 main.tar
 	err := filesUtils.CreateTarArchiveFiles(sourceFiles, tarFilePath)
@@ -80,25 +81,31 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	cmdSplit := strings.Split(compileCmd, " ")
 	// Linux系统下，路径分隔符必然为 /
 	workDir := WORDING_DIR + "/" + uuid
-	compileRes := runCmdByContainer(containerId, cmdSplit, workDir)
+	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "")
 	log.Infof("compileRes:%v", compileRes)
 
 	//====== 运行代码
-	runCmd := dockerInfo.RunCmd
-	runSplit := strings.Split(runCmd, " ")
-	runRes := runCmdByContainer(containerId, runSplit, "")
+	messages := runCode(containerId, dockerInfo, inputList, workDir)
 
-	messages := make([]dto.ExecuteMessage, 0, 0)
-	messages = append(messages, dto.ExecuteMessage{
-		ExitCode:     0,
-		Message:      runRes,
-		ErrorMessage: "",
-		TimeCost:     0,
-		MemoryCost:   0,
-	})
 	return messages
 }
 
+func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []string, workDir string) []dto.ExecuteMessage {
+	messages := make([]dto.ExecuteMessage, 0, 0)
+	runCmd := dockerInfo.RunCmd
+	runSplit := strings.Split(runCmd, " ")
+	for _, inputStr := range inputList {
+		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr)
+		messages = append(messages, dto.ExecuteMessage{
+			ExitCode:     0,
+			Message:      runRes,
+			ErrorMessage: "",
+			TimeCost:     0,
+			MemoryCost:   0,
+		})
+	}
+	return messages
+}
 func (sandbox *SandBox) saveFile(code string) (fs.File, string) {
 	// 不同的编程语言将会保存到不同的地方
 	language := sandbox.DockerInfo.Language
