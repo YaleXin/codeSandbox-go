@@ -43,7 +43,7 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
 	tarFilePath := "main.tar"
 	destFilePath := WORDING_DIR + string(filepath.Separator) + uuid
 
-	message := runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "")
+	message := runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "", "mkdir")
 	if message.ExitCode == EXIT_CODE_ERROR {
 		return false
 	}
@@ -93,7 +93,7 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	cmdSplit := strings.Split(compileCmd, " ")
 	// Linux系统下，路径分隔符必然为 /
 	workDir := WORDING_DIR + "/" + uuid
-	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "")
+	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "", "compile")
 	log.Infof("compileRes:%v", compileRes)
 	if compileRes.ExitCode == EXIT_CODE_ERROR {
 		compileRes.ErrorMessage = "Compile fail"
@@ -111,7 +111,7 @@ func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []st
 	runCmd := dockerInfo.RunCmd
 	runSplit := strings.Split(runCmd, " ")
 	for _, inputStr := range inputList {
-		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr)
+		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr, "run")
 		messages = append(messages, runRes)
 	}
 	return messages

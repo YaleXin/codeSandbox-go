@@ -11,12 +11,12 @@ import (
 // GetTodo
 // @Summary 获取支持的语言列表
 // @Description 获取支持的语言列表，只有在该列表中的语言代码才能运行
-// @Tags Code
+// @Tags Languages
 // @Accept json
 // @Produce json
-// @Success 200 {string} string "ok"
-// @Failure 400 {string} string "bad request"
-// @Failure 500 {string} string "Internal Server Error"
+// @Success 200 {object} responses.Response "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/languages [get]
 func List(c *gin.Context) {
 	languages := sandboxService.GetSupportLanguages()

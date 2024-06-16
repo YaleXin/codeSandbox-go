@@ -5,6 +5,7 @@ import (
 	"codeSandbox/model/dto"
 	"codeSandbox/utils"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -76,7 +77,7 @@ func getContainerId(dockerInfo utils.DockerInfo, idx int) string {
 }
 
 // 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
-func runCmdByContainer(containerId string, cmd []string, workDir string, input string) dto.ExecuteMessage {
+func runCmdByContainer(containerId string, cmd []string, workDir string, input string, tag string) dto.ExecuteMessage {
 	message := dto.ExecuteMessage{}
 	message.ExitCode = EXIT_CODE_ERROR
 	ctx := context.Background()
@@ -102,6 +103,15 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	// 开始时间打点
 	startT := time.Now()
 
+	// 开始监控容器（内存信息）
+	memCn := make(chan uint64)
+	//TODO 关闭
+	//defer close(memCn)
+	done := make(chan struct{})
+	defer close(done)
+
+	go monitorContainerStats(containerId, done, memCn, tag)
+
 	// 启动执行命令并连接到输入输出流
 	execID := resp.ID
 	execAttachResp, err := DockerClient.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
@@ -123,42 +133,53 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 		if err != nil {
 			errMsg := fmt.Sprintf("Write fail:%v{}", err)
 			log.Panicf(errMsg)
-			message.ErrorMessage = errMsg
-			return message
 		}
 		log.Debugf("write:%v", write)
 	}
 
-	// 设置超时
-	ctx, cancel := context.WithTimeout(context.Background(), RUN_CODE_TIME_OUT)
-	defer cancel()
-
 	// 创建一个bytes.Buffer实例用于接收输出
 	var buf bytes.Buffer
 	chDone := make(chan struct{})
+	defer close(chDone)
 	go func() {
-		defer close(chDone)
 		// 将 hijackedResp 中的数据复制到buf中
 		_, err = io.Copy(&buf, hijackedResp)
+		chDone <- struct{}{}
 	}()
-	select {
-	// 在规定时间内完成
-	case <-chDone:
-		tc := time.Since(startT)
-		resultStr := buf.String()
-		message.ExitCode = EXIT_CODE_OK
-		message.Message = resultStr
-		message.TimeCost = tc.Milliseconds()
-		return message
-		// 超时完成
-	case <-ctx.Done():
-		tc := time.Since(startT)
-		message.ExitCode = EXIT_CODE_ERROR
-		message.ErrorMessage = "Timout"
-		message.TimeCost = tc.Milliseconds()
-		return message
-	}
-
+	mainCn := make(chan struct{})
+	go func() {
+	Loop1:
+		for {
+			select {
+			// 在规定时间内完成
+			case <-chDone:
+				// 关闭监控并获取最大内存消耗
+				done <- struct{}{}
+				memCost, readStatus := <-memCn
+				tc := time.Since(startT)
+				resultStr := buf.String()
+				message.ExitCode = EXIT_CODE_OK
+				message.Message = resultStr
+				message.TimeCost = tc.Milliseconds()
+				message.MemoryCost = memCost
+				log.Debugf("before return message = %v, get memCost:%v readStatus:%v on %v", message, memCost, readStatus, tag)
+				break Loop1
+				// 超时完成
+			case <-time.After(RUN_CODE_TIME_OUT):
+				// 关闭监控并获取最大内存消耗
+				memCost, _ := <-memCn
+				tc := time.Since(startT)
+				message.ExitCode = EXIT_CODE_ERROR
+				message.ErrorMessage = "Timout"
+				message.TimeCost = tc.Milliseconds()
+				message.MemoryCost = memCost
+				break Loop1
+			}
+		}
+		mainCn <- struct{}{} // 告诉主协程可以退出了
+	}()
+	<-mainCn
+	return message
 }
 
 func createContainer(dockerInfo *utils.DockerInfo, containerName string) string {
@@ -292,4 +313,64 @@ func connectDocker() (cli *client.Client, err error) {
 	}
 
 	return cli, nil
+}
+
+// 监控指定容器的内存信息（建议协程方式调用），直至主协程发来 done 信号，并将运行期间使用的最大内存返回
+func monitorContainerStats(containerID string, done chan struct{}, memCn chan uint64, flag string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// 实时获取容器统计信息
+	statsReader, err := DockerClient.ContainerStats(ctx, containerID, true)
+	if err != nil {
+		fmt.Errorf("Failed to start stats stream: %v", err)
+	}
+	defer statsReader.Body.Close()
+	// 先获取初始的
+	dec := json.NewDecoder(statsReader.Body)
+	var stat types.StatsJSON
+	err = dec.Decode(&stat)
+	initMemoryUsage := stat.MemoryStats.Usage
+	var maxMemoryUsage uint64 = initMemoryUsage
+Loop:
+	for {
+		select {
+		// 等待主协程发来的 done 信号
+		case <-done:
+			log.Debugf("return main coroutine initMemoryUsage:%v, maxMemoryUsage:%v, usage:%v on %v", initMemoryUsage, maxMemoryUsage, maxMemoryUsage-initMemoryUsage, flag)
+			// 将运行期间占用的最大内存返回给主协程
+			memCn <- maxMemoryUsage - initMemoryUsage
+			break Loop
+		default:
+			//var stat types.StatsJSON
+			if err := dec.Decode(&stat); err != nil {
+				if err == io.EOF {
+					// 连接可能被关闭，尝试重新开始
+					log.Debugf("EOF received, attempting to restart stats stream...\n")
+					statsReader, err = DockerClient.ContainerStats(ctx, containerID, true)
+					if err != nil {
+						log.Errorf("Failed to restart stats stream: %v\n", err)
+						continue
+					}
+					dec = json.NewDecoder(statsReader.Body)
+				} else {
+					log.Errorf("Error decoding stats: %v\n", err)
+				}
+			} else {
+				// 处理内存使用情况，这里简单打印
+				memUsage := stat.MemoryStats.Usage
+				//memLimit := stat.MemoryStats.Limit
+				//usedPercent := float64(memUsage) / float64(memLimit) * 100
+				//log.Debugf("Memory Usage: %v (B) / %v (B) , %.2f%%\n", memUsage, memLimit, usedPercent)
+				if memUsage > maxMemoryUsage {
+					//log.Debugf("update....")
+				}
+				maxMemoryUsage = max(maxMemoryUsage, memUsage)
+			}
+			//log.Debugf("sleep......")
+			// 可以根据需要调整这里的延时，以控制监控频率(可以调小一点，但是会带来开销，间隔太大会导致新检测点到来之时程序已经运行完毕)
+			//time.Sleep(50 * time.Microsecond)
+		}
+	}
+
 }

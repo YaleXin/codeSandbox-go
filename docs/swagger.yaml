@@ -1,6 +1,61 @@
+definitions:
+  dto.ExecuteCodeRequest:
+    description: 用户需要提交的代码执行请求参数
+    properties:
+      code:
+        type: string
+      inputList:
+        description: 运行用例组，每一个元素代表一个用例，例如 1 2\n
+        items:
+          type: string
+        type: array
+      language:
+        type: string
+    type: object
+  responses.Response:
+    properties:
+      code:
+        description: 错误码
+        type: integer
+      data:
+        description: 返回数据
+      msg:
+        description: 错误描述
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /api/v1/executeCode:
+    post:
+      consumes:
+      - application/json
+      description: 根据用户提交的代码和语言执行代码并返回结果
+      parameters:
+      - description: 执行代码请求
+        in: body
+        name: executeCodeRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ExecuteCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 执行代码
+      tags:
+      - Code Execution
   /api/v1/languages:
     get:
       consumes:
@@ -10,18 +65,18 @@ paths:
       - application/json
       responses:
         "200":
-          description: ok
+          description: 成功响应
           schema:
-            type: string
+            $ref: '#/definitions/responses.Response'
         "400":
-          description: bad request
+          description: 错误响应
           schema:
-            type: string
+            $ref: '#/definitions/responses.Response'
         "500":
-          description: Internal Server Error
+          description: 系统内部错误
           schema:
-            type: string
+            $ref: '#/definitions/responses.Response'
       summary: 获取支持的语言列表
       tags:
-      - Code
+      - Languages
 swagger: "2.0"

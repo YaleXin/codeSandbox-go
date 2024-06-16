@@ -5,5 +5,5 @@ type ExecuteMessage struct {
 	Message      string
 	ErrorMessage string
 	TimeCost     int64
-	MemoryCost   int64
+	MemoryCost   uint64
 }

@@ -5,17 +5,18 @@ import (
 	"codeSandbox/service/sandbox"
 	"codeSandbox/utils"
 	"github.com/sirupsen/logrus"
+	"os"
 	"testing"
 )
 
 func TestExecuteCode(t *testing.T) {
-
+	bytes, _ := os.ReadFile("C:\\Users\\Yalexin\\GolandProjects\\codeSandbox\\inner_test\\demo\\main.go")
 	// 在测试开始前设置日志级别
 	logrus.SetLevel(logrus.DebugLevel)
 	codeRequest := dto.ExecuteCodeRequest{
-		Code:      "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\ttime.Sleep(time.Second * 8)\n\tfmt.Println(a + b)\n}",
+		Code:      string(bytes),
 		Language:  "Go",
-		InputList: []string{"8 9 \n"},
+		InputList: []string{"1 9999999 \n"},
 	}
 	sandbox := sandbox.SandBox{
 		DockerInfo: utils.DockerInfo{
@@ -29,6 +30,13 @@ func TestExecuteCode(t *testing.T) {
 	}
 	runRes := sandbox.ExecuteCode(&codeRequest)
 	logrus.Debugf("runRes:%v", runRes)
+
+	for _, res := range runRes.ExecuteMessages {
+		if res.MemoryCost == 0 {
+			t.Errorf("res.MemoryCost is 0")
+		}
+	}
+
 	t.Log("test finish")
 
 }
