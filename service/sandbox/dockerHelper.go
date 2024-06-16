@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 const CONTAINER_PREFIX string = "codeSandbox"
@@ -98,6 +99,9 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 		return message
 	}
 
+	// 开始时间打点
+	startT := time.Now()
+
 	// 启动执行命令并连接到输入输出流
 	execID := resp.ID
 	execAttachResp, err := DockerClient.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
@@ -140,14 +144,18 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	select {
 	// 在规定时间内完成
 	case <-chDone:
+		tc := time.Since(startT)
 		resultStr := buf.String()
 		message.ExitCode = EXIT_CODE_OK
 		message.Message = resultStr
+		message.TimeCost = tc.Milliseconds()
 		return message
 		// 超时完成
 	case <-ctx.Done():
+		tc := time.Since(startT)
 		message.ExitCode = EXIT_CODE_ERROR
 		message.ErrorMessage = "Timout"
+		message.TimeCost = tc.Milliseconds()
 		return message
 	}
 
