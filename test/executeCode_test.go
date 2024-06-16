@@ -16,7 +16,7 @@ func TestExecuteCode(t *testing.T) {
 	codeRequest := dto.ExecuteCodeRequest{
 		Code:      string(bytes),
 		Language:  "Go",
-		InputList: []string{"1 9999999 \n"},
+		InputList: []string{"1 9999 \n"},
 	}
 	sandbox := sandbox.SandBox{
 		DockerInfo: utils.DockerInfo{

@@ -167,6 +167,7 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 				// 超时完成
 			case <-time.After(RUN_CODE_TIME_OUT):
 				// 关闭监控并获取最大内存消耗
+				done <- struct{}{}
 				memCost, _ := <-memCn
 				tc := time.Since(startT)
 				message.ExitCode = EXIT_CODE_ERROR
@@ -359,17 +360,14 @@ Loop:
 			} else {
 				// 处理内存使用情况，这里简单打印
 				memUsage := stat.MemoryStats.Usage
-				//memLimit := stat.MemoryStats.Limit
-				//usedPercent := float64(memUsage) / float64(memLimit) * 100
-				//log.Debugf("Memory Usage: %v (B) / %v (B) , %.2f%%\n", memUsage, memLimit, usedPercent)
+				memLimit := stat.MemoryStats.Limit
+				usedPercent := float64(memUsage) / float64(memLimit) * 100
+				log.Debugf("Memory Usage: %v (B) / %v (B) , %.2f%%\n", memUsage, memLimit, usedPercent)
 				if memUsage > maxMemoryUsage {
 					//log.Debugf("update....")
 				}
 				maxMemoryUsage = max(maxMemoryUsage, memUsage)
 			}
-			//log.Debugf("sleep......")
-			// 可以根据需要调整这里的延时，以控制监控频率(可以调小一点，但是会带来开销，间隔太大会导致新检测点到来之时程序已经运行完毕)
-			//time.Sleep(50 * time.Microsecond)
 		}
 	}
 
