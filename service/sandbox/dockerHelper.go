@@ -109,8 +109,12 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	//defer close(memCn)
 	done := make(chan struct{})
 	defer close(done)
+	monitorReady := make(chan struct{})
+	defer close(monitorReady)
+	go monitorContainerStats(containerId, done, memCn, monitorReady, tag)
 
-	go monitorContainerStats(containerId, done, memCn, tag)
+	// 等待监控程序就绪
+	<-monitorReady
 
 	// 启动执行命令并连接到输入输出流
 	execID := resp.ID
@@ -128,13 +132,13 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 
 	// 向输入流中写入数据
 	if input != "" {
-
+		log.Debugf("start to write data to stdin")
 		write, err := hijackedResp.Write([]byte(input))
 		if err != nil {
 			errMsg := fmt.Sprintf("Write fail:%v{}", err)
 			log.Panicf(errMsg)
 		}
-		log.Debugf("write:%v", write)
+		log.Debugf("write:%v bytes finish", write)
 	}
 
 	// 创建一个bytes.Buffer实例用于接收输出
@@ -144,6 +148,7 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	go func() {
 		// 将 hijackedResp 中的数据复制到buf中
 		_, err = io.Copy(&buf, hijackedResp)
+		log.Debugf("read data from stdout finish...")
 		chDone <- struct{}{}
 	}()
 	mainCn := make(chan struct{})
@@ -317,9 +322,8 @@ func connectDocker() (cli *client.Client, err error) {
 }
 
 // 监控指定容器的内存信息（建议协程方式调用），直至主协程发来 done 信号，并将运行期间使用的最大内存返回
-func monitorContainerStats(containerID string, done chan struct{}, memCn chan uint64, flag string) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func monitorContainerStats(containerID string, done chan struct{}, memCn chan uint64, monitorReady chan struct{}, flag string) {
+	ctx := context.Background()
 
 	// 实时获取容器统计信息
 	statsReader, err := DockerClient.ContainerStats(ctx, containerID, true)
@@ -327,12 +331,10 @@ func monitorContainerStats(containerID string, done chan struct{}, memCn chan ui
 		fmt.Errorf("Failed to start stats stream: %v", err)
 	}
 	defer statsReader.Body.Close()
-	// 先获取初始的
-	dec := json.NewDecoder(statsReader.Body)
-	var stat types.StatsJSON
-	err = dec.Decode(&stat)
-	initMemoryUsage := stat.MemoryStats.Usage
-	var maxMemoryUsage uint64 = initMemoryUsage
+	decoder := json.NewDecoder(statsReader.Body)
+	var initMemoryUsage uint64 = 0
+	var maxMemoryUsage uint64 = 0
+	monitorReady <- struct{}{}
 Loop:
 	for {
 		select {
@@ -343,31 +345,24 @@ Loop:
 			memCn <- maxMemoryUsage - initMemoryUsage
 			break Loop
 		default:
-			//var stat types.StatsJSON
-			if err := dec.Decode(&stat); err != nil {
-				if err == io.EOF {
-					// 连接可能被关闭，尝试重新开始
-					log.Debugf("EOF received, attempting to restart stats stream...\n")
-					statsReader, err = DockerClient.ContainerStats(ctx, containerID, true)
-					if err != nil {
-						log.Errorf("Failed to restart stats stream: %v\n", err)
-						continue
-					}
-					dec = json.NewDecoder(statsReader.Body)
-				} else {
-					log.Errorf("Error decoding stats: %v\n", err)
+			var stat types.StatsJSON
+			err := decoder.Decode(&stat)
+			if err != nil {
+				if err == io.EOF { // 连接被Docker关闭或意外中断
+					log.Errorf("Connection closed or error receiving stats:", err)
+					return
 				}
-			} else {
-				// 处理内存使用情况，这里简单打印
-				memUsage := stat.MemoryStats.Usage
-				memLimit := stat.MemoryStats.Limit
-				usedPercent := float64(memUsage) / float64(memLimit) * 100
-				log.Debugf("Memory Usage: %v (B) / %v (B) , %.2f%%\n", memUsage, memLimit, usedPercent)
-				if memUsage > maxMemoryUsage {
-					//log.Debugf("update....")
-				}
-				maxMemoryUsage = max(maxMemoryUsage, memUsage)
+				log.Errorf("Error decoding stats:", err)
+				continue
 			}
+
+			// 处理统计信息
+			memUsage := stat.MemoryStats.Usage
+			//log.Debugf("memUsage : %v", memUsage)
+			if initMemoryUsage == 0 {
+				initMemoryUsage = memUsage
+			}
+			maxMemoryUsage = max(maxMemoryUsage, memUsage)
 		}
 	}
 
