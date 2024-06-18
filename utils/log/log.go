@@ -52,7 +52,7 @@ func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 
-	timestamp := entry.Time.Format("2006-01-02 15:04:05")
+	timestamp := entry.Time.Format("2024-06-18 15:04:05.000")
 	var newLog string
 
 	//HasCaller()为true才会有调用信息

@@ -26,7 +26,7 @@ const WORDING_DIR string = "/codeSandbox"
 // 代码沙箱执行过程的退出码
 const (
 	// 正常退出
-	EXIT_CODE_OK = iota
+	EXIT_CODE_OK = int8(iota)
 	// 异常退出
 	EXIT_CODE_ERROR
 )
@@ -76,8 +76,50 @@ func getContainerId(dockerInfo utils.DockerInfo, idx int) string {
 	return containerId
 }
 
+func containerRunCmd(execId string, inputStr string, msgChannel chan dto.ExecuteMessage, tag string) {
+	ctx := context.Background()
+	executeMessage := dto.ExecuteMessage{}
+	// 连接容器并运行
+	execAttachResp, err := DockerClient.ContainerExecAttach(ctx, execId, types.ExecStartCheck{})
+	if err != nil {
+		errMsg := fmt.Sprintf("ContainerExecAttach fail:%v{}", err)
+		log.Panicf(errMsg)
+		executeMessage.ErrorMessage = errMsg
+		executeMessage.ExitCode = EXIT_CODE_ERROR
+		msgChannel <- executeMessage
+	}
+	hijackedResp := execAttachResp.Conn
+	defer hijackedResp.Close()
+	// 向容器输入流写入数据
+	if inputStr != "" {
+		log.Debugf("start to write data to stdin on %v", tag)
+		write, err := hijackedResp.Write([]byte(inputStr))
+		if err != nil {
+			errMsg := fmt.Sprintf("Write fail:%v{}", err)
+			log.Panicf(errMsg)
+			executeMessage.ErrorMessage = errMsg
+			executeMessage.ExitCode = EXIT_CODE_ERROR
+			msgChannel <- executeMessage
+		}
+		log.Debugf("write:%v bytes finish %v", write, tag)
+	}
+	// 获取容器标准输出
+	var buf bytes.Buffer
+
+	// 将 hijackedResp 中的数据复制到buf中
+	_, err = io.Copy(&buf, hijackedResp)
+	log.Debugf("read data from stdout finish...")
+	executeMessage.ErrorMessage = buf.String()
+	executeMessage.ExitCode = EXIT_CODE_OK
+	msgChannel <- executeMessage
+
+}
+
 // 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
 func runCmdByContainer(containerId string, cmd []string, workDir string, input string, tag string) dto.ExecuteMessage {
+	// 为了①拿到容器运行该命令所消耗的内存，②同时执行命令并获取容器的标准输出
+	// 需要开启两个协程，分别完成以上功能
+	// 为了得到更精确的监控信息先开启监控协程①，①“准备就绪”后再②开始执行命令
 	message := dto.ExecuteMessage{}
 	message.ExitCode = EXIT_CODE_ERROR
 	ctx := context.Background()
@@ -99,92 +141,52 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 		message.ErrorMessage = errMsg
 		return message
 	}
+	//========= 监控容器（内存信息）
+	memUsageChannel := make(chan uint64)
 
+	shouldStopMoniChannel := make(chan struct{})
+
+	moniReadyChannel := make(chan struct{})
+
+	go monitorContainerStats(containerId, shouldStopMoniChannel, memUsageChannel, moniReadyChannel, tag)
+
+	// 等待监控程序 “ 就绪 ”
+	<-moniReadyChannel
+	log.Debugf("main coroutine get ready status on %v", tag)
+
+	messagesChannel := make(chan dto.ExecuteMessage)
+
+	//========= 对指定容器指定执行命令，向其输入参数
 	// 开始时间打点
 	startT := time.Now()
-
-	// 开始监控容器（内存信息）
-	memCn := make(chan uint64)
-	//TODO 关闭
-	//defer close(memCn)
-	done := make(chan struct{})
-	defer close(done)
-	monitorReady := make(chan struct{})
-	defer close(monitorReady)
-	go monitorContainerStats(containerId, done, memCn, monitorReady, tag)
-
-	// 等待监控程序就绪
-	<-monitorReady
-
-	// 启动执行命令并连接到输入输出流
-	execID := resp.ID
-	execAttachResp, err := DockerClient.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
-	if err != nil {
-		errMsg := fmt.Sprintf("ContainerExecAttach fail:%v{}", err)
-		log.Panicf(errMsg)
-		message.ErrorMessage = errMsg
-		return message
-	}
-	defer execAttachResp.Close()
-
-	hijackedResp := execAttachResp.Conn
-	defer hijackedResp.Close()
-
-	// 向输入流中写入数据
-	if input != "" {
-		log.Debugf("start to write data to stdin")
-		write, err := hijackedResp.Write([]byte(input))
-		if err != nil {
-			errMsg := fmt.Sprintf("Write fail:%v{}", err)
-			log.Panicf(errMsg)
+	go containerRunCmd(resp.ID, input, messagesChannel, tag)
+Loop:
+	for {
+		select {
+		case message, _ = <-messagesChannel:
+			// 等待命令执行完毕（按时完成）
+			break Loop
+		case <-time.After(RUN_CODE_TIME_OUT):
+			// 超时结束
+			message.ExitCode = EXIT_CODE_ERROR
+			message.ErrorMessage = "Time out"
+			break Loop
 		}
-		log.Debugf("write:%v bytes finish", write)
 	}
+	// 结束时间打点
+	tc := time.Since(startT)
+	// 告诉监控协程，可以停止了，同时获取运行期间内存使用量
+	log.Debugf("Send stop channel to monitor on %v", tag)
+	shouldStopMoniChannel <- struct{}{}
+	log.Debugf("Send stop channel finish on %v", tag)
 
-	// 创建一个bytes.Buffer实例用于接收输出
-	var buf bytes.Buffer
-	chDone := make(chan struct{})
-	defer close(chDone)
-	go func() {
-		// 将 hijackedResp 中的数据复制到buf中
-		_, err = io.Copy(&buf, hijackedResp)
-		log.Debugf("read data from stdout finish...")
-		chDone <- struct{}{}
-	}()
-	mainCn := make(chan struct{})
-	go func() {
-	Loop1:
-		for {
-			select {
-			// 在规定时间内完成
-			case <-chDone:
-				// 关闭监控并获取最大内存消耗
-				done <- struct{}{}
-				memCost, readStatus := <-memCn
-				tc := time.Since(startT)
-				resultStr := buf.String()
-				message.ExitCode = EXIT_CODE_OK
-				message.Message = resultStr
-				message.TimeCost = tc.Milliseconds()
-				message.MemoryCost = memCost
-				log.Debugf("before return message = %v, get memCost:%v readStatus:%v on %v", message, memCost, readStatus, tag)
-				break Loop1
-				// 超时完成
-			case <-time.After(RUN_CODE_TIME_OUT):
-				// 关闭监控并获取最大内存消耗
-				done <- struct{}{}
-				memCost, _ := <-memCn
-				tc := time.Since(startT)
-				message.ExitCode = EXIT_CODE_ERROR
-				message.ErrorMessage = "Timout"
-				message.TimeCost = tc.Milliseconds()
-				message.MemoryCost = memCost
-				break Loop1
-			}
-		}
-		mainCn <- struct{}{} // 告诉主协程可以退出了
-	}()
-	<-mainCn
+	message.TimeCost = tc.Milliseconds()
+	message.MemoryCost = <-memUsageChannel
+	close(memUsageChannel)
+	close(shouldStopMoniChannel)
+	close(moniReadyChannel)
+	close(messagesChannel)
+
 	return message
 }
 
@@ -312,7 +314,7 @@ func init() {
 }
 func connectDocker() (cli *client.Client, err error) {
 	dockerConfig := utils.Config.SandboxMachine
-
+	// TODO 部署时，换用另一种方式初始化
 	cli, err = client.NewClientWithOpts(client.WithAPIVersionNegotiation(), client.WithHost(fmt.Sprintf("tcp://%v:%v", dockerConfig.Host, dockerConfig.Port)))
 	if err != nil {
 		return nil, err
@@ -322,7 +324,7 @@ func connectDocker() (cli *client.Client, err error) {
 }
 
 // 监控指定容器的内存信息（建议协程方式调用），直至主协程发来 done 信号，并将运行期间使用的最大内存返回
-func monitorContainerStats(containerID string, done chan struct{}, memCn chan uint64, monitorReady chan struct{}, flag string) {
+func monitorContainerStats(containerID string, shouldStopMoniChannel chan struct{}, memUsageChannel chan uint64, monitorReady chan struct{}, flag string) {
 	ctx := context.Background()
 
 	// 实时获取容器统计信息
@@ -332,21 +334,35 @@ func monitorContainerStats(containerID string, done chan struct{}, memCn chan ui
 	}
 	defer statsReader.Body.Close()
 	decoder := json.NewDecoder(statsReader.Body)
-	var initMemoryUsage uint64 = 0
-	var maxMemoryUsage uint64 = 0
+	// 先获取一次初始值，再通知主协程，监控程序已 “就绪”
+	var stat types.StatsJSON
+	err = decoder.Decode(&stat)
+	if err != nil {
+		if err == io.EOF { // 连接被Docker关闭或意外中断
+			log.Errorf("Connection closed or error receiving stats:", err)
+			return
+		}
+		log.Errorf("Error decoding stats:", err)
+	}
+
+	// 处理统计信息
+	memUsage := stat.MemoryStats.Usage
+	var initMemoryUsage = memUsage
+	var maxMemoryUsage = memUsage
+	// 通知主协程，监控程序已“就绪”
+	//log.Debugf("monitor ready on %v", flag)
 	monitorReady <- struct{}{}
 Loop:
 	for {
 		select {
 		// 等待主协程发来的 done 信号
-		case <-done:
+		case <-shouldStopMoniChannel:
 			log.Debugf("return main coroutine initMemoryUsage:%v, maxMemoryUsage:%v, usage:%v on %v", initMemoryUsage, maxMemoryUsage, maxMemoryUsage-initMemoryUsage, flag)
 			// 将运行期间占用的最大内存返回给主协程
-			memCn <- maxMemoryUsage - initMemoryUsage
+			memUsageChannel <- maxMemoryUsage - initMemoryUsage
 			break Loop
 		default:
-			var stat types.StatsJSON
-			err := decoder.Decode(&stat)
+			err = decoder.Decode(&stat)
 			if err != nil {
 				if err == io.EOF { // 连接被Docker关闭或意外中断
 					log.Errorf("Connection closed or error receiving stats:", err)
@@ -357,7 +373,8 @@ Loop:
 			}
 
 			// 处理统计信息
-			memUsage := stat.MemoryStats.Usage
+			memUsage = stat.MemoryStats.Usage
+			//log.Debugf("memUsage:%v on %v", memUsage, flag)
 			//log.Debugf("memUsage : %v", memUsage)
 			if initMemoryUsage == 0 {
 				initMemoryUsage = memUsage
@@ -365,5 +382,6 @@ Loop:
 			maxMemoryUsage = max(maxMemoryUsage, memUsage)
 		}
 	}
+	log.Debugf("monitorContainerStats finish on %v", flag)
 
 }

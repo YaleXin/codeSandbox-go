@@ -1,0 +1,78 @@
+Server:
+  # dev 开发模式 prod 生产模式
+  AppMode: dev
+  Host: localhost
+  Port: 8080
+  # Jwt加密秘钥
+  JwtKey:
+  Database:
+    Type: mysql
+    Host: localhost
+    Port: 3307
+    User: root
+    PassWord: 123456
+    Name: qiublog
+    Redis:
+      Host: localhost
+      Port: 6379
+      Password:
+      Db: 0
+  Oss:
+    #oss服务商，支持[qiniu,aliyun]
+    Name: aliyun
+    qiniu:
+      AccessKey:
+      SecretKey:
+      Bucket:
+      Sever:
+    aliyun:
+      AccessKeyId:
+      AccessKeySecret:
+      Endpoint:
+      BucketName:
+  Push:
+    # 启用哪个,空或其他为不启用
+    Enable: Email
+    # 企业微信推送
+    # 需要注意企业微信，后面新建的应用必须要ip白名单，不然用不了
+    WxPush:
+      CorpId:
+      Agentid:
+      Secret:
+    # 邮箱
+    Email:
+      # 发送方和授权码
+      From:
+      Password:
+      # 不填默认发给自己
+      To:
+      Host: smtp.qq.com
+      Port: 25
+SandboxMachine:
+  Host: 192.168.254.148
+  Port: 2375
+DockerInfoList:
+  - Language: Java
+    ImageName: openjdk:8-alpine
+    ContainerCount: 2
+    Filename: Main.java
+    CompileCmd: "javac Main.java -encoding utf-8"
+    RunCmd: "java Main"
+  - Language: C
+    ImageName: gcc:6.3.0
+    ContainerCount: 2
+    Filename: Main.c
+    CompileCmd: "gcc Main.c -o Main"
+    RunCmd: "./Main"
+  - Language: Python
+    ImageName: python:3.9
+    ContainerCount: 2
+    Filename: Main.py
+    CompileCmd: "echo python"
+    RunCmd: "python Main.py"
+  - Language: Go
+    ImageName: golang:1.17
+    ContainerCount: 3
+    Filename: Main.go
+    CompileCmd: "go build Main.go"
+    RunCmd: "./main"
