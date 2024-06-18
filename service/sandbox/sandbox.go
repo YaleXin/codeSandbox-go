@@ -17,6 +17,7 @@ import (
 )
 
 const CODE_LOCAL_DIR_PREX string = "temp"
+const ERR_MSG_TIME_OUT string = "TIMEOUT"
 
 // 每个执行用例执行最大的时间，单位为秒
 const RUN_CODE_TIME_OUT = 5 * time.Second

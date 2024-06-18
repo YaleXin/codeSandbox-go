@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
@@ -103,16 +104,28 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 		}
 		log.Debugf("write:%v bytes finish %v", write, tag)
 	}
-	// 获取容器标准输出
-	var buf bytes.Buffer
+	// 获取容器标准输出和标准错误
+	var stdoutBuf, stderrBuf bytes.Buffer
+	_, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, hijackedResp)
+	if err != nil {
+		errMsg := fmt.Sprintf("StdCopy fail:%v", err)
+		log.Panicf(errMsg)
+		executeMessage.ErrorMessage = errMsg
+		executeMessage.ExitCode = EXIT_CODE_ERROR
+	} else {
+		stderrStr := stderrBuf.String()
+		stdoutStr := stdoutBuf.String()
+		if stderrStr != "" {
+			executeMessage.ErrorMessage = stderrStr
+			executeMessage.ExitCode = EXIT_CODE_ERROR
+		} else {
+			executeMessage.ErrorMessage = stdoutStr
+			executeMessage.ExitCode = EXIT_CODE_OK
+		}
+	}
 
-	// 将 hijackedResp 中的数据复制到buf中
-	_, err = io.Copy(&buf, hijackedResp)
 	log.Debugf("read data from stdout finish...")
-	executeMessage.ErrorMessage = buf.String()
-	executeMessage.ExitCode = EXIT_CODE_OK
 	msgChannel <- executeMessage
-
 }
 
 // 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
@@ -169,7 +182,7 @@ Loop:
 		case <-time.After(RUN_CODE_TIME_OUT):
 			// 超时结束
 			message.ExitCode = EXIT_CODE_ERROR
-			message.ErrorMessage = "Time out"
+			message.ErrorMessage = ERR_MSG_TIME_OUT
 			break Loop
 		}
 	}

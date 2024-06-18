@@ -4,11 +4,8 @@ import (
 	"codeSandbox/service/sandbox"
 	"context"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
-	"io"
-	"os"
 	"testing"
 )
 
@@ -22,31 +19,6 @@ func TestDockerClineInit(t *testing.T) {
 	// docker client:&{http tcp://192.168.254.1:2375 tcp 192.168.254.1:2375  0xc00002f980 1.45 <nil> map[] false true false <nil> 0xc0001057c0}
 	if err != nil {
 		logrus.Errorf("GetImageList:%v", err)
-	}
-
-}
-
-func TestContainerStart(t *testing.T) {
-	ctx := context.Background()
-	cli := sandbox.DockerClient
-
-	imageName := "golang:1.17"
-
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-	if err != nil {
-		panic(err)
-	}
-	io.Copy(os.Stdout, out)
-
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-	}, nil, nil, nil, "aaa")
-	if err != nil {
-		panic(err)
-	}
-
-	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		panic(err)
 	}
 
 }

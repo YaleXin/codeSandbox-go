@@ -54,6 +54,22 @@ func TestExecuteLowCode(t *testing.T) {
 
 }
 
+func TestExecuteTimeoutCode(t *testing.T) {
+	code := "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\tsum := a + b\n\tsliceNums := make([]int, 0, 0)\n\tfor i := 0; i < sum; i++ {\n\t\tsliceNums = append(sliceNums, i)\n\t}\n\ttime.Sleep(10 * time.Second)\n\tfmt.Println(sum)\n}\n"
+	inputList := []string{"1 99999\n"}
+	// 在测试开始前设置日志级别
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetFormatter(&CustomFormatter{})
+	response := execode(code, inputList)
+	logrus.Debugf("runRes:%v", response)
+	for _, executeMsg := range response.ExecuteMessages {
+		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_ERROR)
+		assert.Equal(t, executeMsg.ErrorMessage, sandbox.ERR_MSG_TIME_OUT)
+		assert.Equal(t, executeMsg.Message, "")
+	}
+
+}
+
 // 无睡眠
 func TestExecuteFastCode(t *testing.T) {
 	code := "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\tsum := a + b\n\tsliceNums := make([]int, 0, 0)\n\tfor i := 0; i < sum; i++ {\n\t\tsliceNums = append(sliceNums, i)\n\t}\n\tfmt.Println(sum)\n}\n"
@@ -65,6 +81,22 @@ func TestExecuteFastCode(t *testing.T) {
 	logrus.Debugf("runRes:%v", response)
 	for _, executeMsg := range response.ExecuteMessages {
 		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_OK)
+		//assert.NotEqual(t, executeMsg.MemoryCost, uint64(0))
+	}
+
+}
+
+// 除 0 代码
+func TestExecuteDiveZeroCode(t *testing.T) {
+	code := "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tfmt.Scanf(\"%d%d\", &a, &b)\n\tsum := a + b\n\tfmt.Println(a / b)\n\tsliceNums := make([]int, 0, 0)\n\tfor i := 0; i < sum; i++ {\n\t\tsliceNums = append(sliceNums, i)\n\t}\n\tfmt.Println(sum)\n}\n"
+	inputList := []string{"bbbb aaa\n"}
+	// 在测试开始前设置日志级别
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetFormatter(&CustomFormatter{})
+	response := execode(code, inputList)
+	logrus.Debugf("runRes:%v", response)
+	for _, executeMsg := range response.ExecuteMessages {
+		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_ERROR)
 		//assert.NotEqual(t, executeMsg.MemoryCost, uint64(0))
 	}
 
