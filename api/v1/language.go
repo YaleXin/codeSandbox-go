@@ -19,7 +19,8 @@ import (
 // @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/languages [get]
 func List(c *gin.Context) {
-	languages := sandboxService.GetSupportLanguages()
+	service := sandboxService.SandboxService{}
+	languages := service.GetSupportLanguages()
 	log.Debug("languages = ", languages)
 	c.JSON(http.StatusOK, baseRes.OK.WithData(languages))
 }

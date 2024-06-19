@@ -47,8 +47,8 @@ func TestExecuteLowCode(t *testing.T) {
 	logrus.SetFormatter(&CustomFormatter{})
 	response := execode(code, inputList)
 	logrus.Debugf("runRes:%v", response)
-	for _, executeMsg := range response.ExecuteMessages {
-		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_OK)
+	for _, executeMsg := range response {
+		assert.Equal(t, executeMsg.ExitCode, utils.EXIT_CODE_OK)
 		assert.NotEqual(t, executeMsg.MemoryCost, uint64(0))
 	}
 
@@ -62,8 +62,8 @@ func TestExecuteTimeoutCode(t *testing.T) {
 	logrus.SetFormatter(&CustomFormatter{})
 	response := execode(code, inputList)
 	logrus.Debugf("runRes:%v", response)
-	for _, executeMsg := range response.ExecuteMessages {
-		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_ERROR)
+	for _, executeMsg := range response {
+		assert.Equal(t, executeMsg.ExitCode, utils.EXIT_CODE_TIME_OUT)
 		assert.Equal(t, executeMsg.ErrorMessage, sandbox.ERR_MSG_TIME_OUT)
 		assert.Equal(t, executeMsg.Message, "")
 	}
@@ -79,8 +79,8 @@ func TestExecuteFastCode(t *testing.T) {
 	logrus.SetFormatter(&CustomFormatter{})
 	response := execode(code, inputList)
 	logrus.Debugf("runRes:%v", response)
-	for _, executeMsg := range response.ExecuteMessages {
-		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_OK)
+	for _, executeMsg := range response {
+		assert.Equal(t, executeMsg.ExitCode, utils.EXIT_CODE_OK)
 		//assert.NotEqual(t, executeMsg.MemoryCost, uint64(0))
 	}
 
@@ -95,14 +95,14 @@ func TestExecuteDiveZeroCode(t *testing.T) {
 	logrus.SetFormatter(&CustomFormatter{})
 	response := execode(code, inputList)
 	logrus.Debugf("runRes:%v", response)
-	for _, executeMsg := range response.ExecuteMessages {
-		assert.Equal(t, executeMsg.ExitCode, sandbox.EXIT_CODE_ERROR)
+	for _, executeMsg := range response {
+		assert.Equal(t, executeMsg.ExitCode, utils.EXIT_CODE_RUNTIME_ERROR)
 		//assert.NotEqual(t, executeMsg.MemoryCost, uint64(0))
 	}
 
 }
 
-func execode(code string, inputList []string) dto.ExecuteCodeResponse {
+func execode(code string, inputList []string) []dto.ExecuteMessage {
 	codeRequest := dto.ExecuteCodeRequest{
 		Code:      code,
 		Language:  "Go",

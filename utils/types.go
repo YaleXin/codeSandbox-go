@@ -1,5 +1,27 @@
 package utils
 
+// 代码沙箱执行过程的退出码
+const (
+	// 正常退出
+	EXIT_CODE_OK = int8(iota)
+	// 编译失败
+	EXIT_CODE_COMPILE_ERROR
+	// 超时退出
+	EXIT_CODE_TIME_OUT
+	// 运行出错
+	EXIT_CODE_RUNTIME_ERROR
+	// 其他错误
+	EXIT_CODE_BASE_ERROR
+)
+
+var EXIT_ERROR_MESSAGE [5]string = [5]string{
+	"EXIT_CODE_OK",
+	"COMPILE ERROR",
+	"TIME OUT",
+	"RUNTIME ERROR",
+	"OTHER ERROR",
+}
+
 type ServerConfig struct {
 	Server         Server         `yaml:"Server"`
 	SandboxMachine SandboxMachine `yaml:"SandboxMachine"`

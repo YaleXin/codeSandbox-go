@@ -3,8 +3,7 @@ package api_v1
 import (
 	"codeSandbox/model/dto"
 	baseRes "codeSandbox/responses"
-	"codeSandbox/service/sandbox"
-	"codeSandbox/utils"
+	service "codeSandbox/service/service_v1"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -23,18 +22,9 @@ import (
 func ExecuteCode(c *gin.Context) {
 	var exeRequest dto.ExecuteCodeRequest
 	if c.ShouldBind(&exeRequest) == nil && exeRequest.Code != "" && exeRequest.Language != "" {
-		sandbox := sandbox.SandBox{
-			DockerInfo: utils.DockerInfo{
-				Language:       "Go",
-				ImageName:      "golang:1.17",
-				Filename:       "Main.go",
-				CompileCmd:     "go build Main.go",
-				RunCmd:         "./Main",
-				ContainerCount: 1,
-			},
-		}
-		code := sandbox.ExecuteCode(&exeRequest)
-		c.JSON(http.StatusOK, baseRes.OK.WithData(code))
+		sandboxService := service.SandboxService{}
+		executeCode := sandboxService.ExecuteCode(exeRequest)
+		c.JSON(http.StatusOK, baseRes.OK.WithData(executeCode))
 	} else {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
 	}

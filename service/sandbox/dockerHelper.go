@@ -24,14 +24,6 @@ import (
 const CONTAINER_PREFIX string = "codeSandbox"
 const WORDING_DIR string = "/codeSandbox"
 
-// 代码沙箱执行过程的退出码
-const (
-	// 正常退出
-	EXIT_CODE_OK = int8(iota)
-	// 异常退出
-	EXIT_CODE_ERROR
-)
-
 var DockerClient *client.Client
 
 type SandBox struct {
@@ -86,7 +78,7 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 		errMsg := fmt.Sprintf("ContainerExecAttach fail:%v{}", err)
 		log.Panicf(errMsg)
 		executeMessage.ErrorMessage = errMsg
-		executeMessage.ExitCode = EXIT_CODE_ERROR
+		executeMessage.ExitCode = utils.EXIT_CODE_BASE_ERROR
 		msgChannel <- executeMessage
 	}
 	hijackedResp := execAttachResp.Conn
@@ -99,7 +91,7 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 			errMsg := fmt.Sprintf("Write fail:%v{}", err)
 			log.Panicf(errMsg)
 			executeMessage.ErrorMessage = errMsg
-			executeMessage.ExitCode = EXIT_CODE_ERROR
+			executeMessage.ExitCode = utils.EXIT_CODE_BASE_ERROR
 			msgChannel <- executeMessage
 		}
 		log.Debugf("write:%v bytes finish %v", write, tag)
@@ -111,16 +103,16 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 		errMsg := fmt.Sprintf("StdCopy fail:%v", err)
 		log.Panicf(errMsg)
 		executeMessage.ErrorMessage = errMsg
-		executeMessage.ExitCode = EXIT_CODE_ERROR
+		executeMessage.ExitCode = utils.EXIT_CODE_BASE_ERROR
 	} else {
 		stderrStr := stderrBuf.String()
 		stdoutStr := stdoutBuf.String()
 		if stderrStr != "" {
 			executeMessage.ErrorMessage = stderrStr
-			executeMessage.ExitCode = EXIT_CODE_ERROR
+			executeMessage.ExitCode = utils.EXIT_CODE_RUNTIME_ERROR
 		} else {
-			executeMessage.ErrorMessage = stdoutStr
-			executeMessage.ExitCode = EXIT_CODE_OK
+			executeMessage.Message = stdoutStr
+			executeMessage.ExitCode = utils.EXIT_CODE_OK
 		}
 	}
 
@@ -134,7 +126,7 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	// 需要开启两个协程，分别完成以上功能
 	// 为了得到更精确的监控信息先开启监控协程①，①“准备就绪”后再②开始执行命令
 	message := dto.ExecuteMessage{}
-	message.ExitCode = EXIT_CODE_ERROR
+	message.ExitCode = utils.EXIT_CODE_BASE_ERROR
 	ctx := context.Background()
 	// 创建执行命令实例
 	execConfig := types.ExecConfig{
@@ -181,7 +173,7 @@ Loop:
 			break Loop
 		case <-time.After(RUN_CODE_TIME_OUT):
 			// 超时结束
-			message.ExitCode = EXIT_CODE_ERROR
+			message.ExitCode = utils.EXIT_CODE_TIME_OUT
 			message.ErrorMessage = ERR_MSG_TIME_OUT
 			break Loop
 		}

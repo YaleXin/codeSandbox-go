@@ -75,4 +75,4 @@ DockerInfoList:
     ContainerCount: 3
     Filename: Main.go
     CompileCmd: "go build Main.go"
-    RunCmd: "./main"
+    RunCmd: "./Main"

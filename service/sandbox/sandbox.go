@@ -29,12 +29,12 @@ func clearFile(codeFilename string) {
 	}
 	log.Debugf("clear file finish, codeFilename:%v", codeFilename)
 }
-func getOutputResponse(executeMessageArrayList []dto.ExecuteMessage) dto.ExecuteCodeResponse {
-	response := dto.ExecuteCodeResponse{}
+func getOutputMessage(executeMessageArrayList []dto.ExecuteMessage) []dto.ExecuteMessage {
+	executeMessages := make([]dto.ExecuteMessage, 0, 0)
 	for _, executeMessage := range executeMessageArrayList {
-		response.ExecuteMessages = append(response.ExecuteMessages, executeMessage)
+		executeMessages = append(executeMessages, executeMessage)
 	}
-	return response
+	return executeMessages
 }
 
 func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
@@ -45,7 +45,7 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
 	destFilePath := WORDING_DIR + string(filepath.Separator) + uuid
 
 	message := runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "", "mkdir")
-	if message.ExitCode == EXIT_CODE_ERROR {
+	if message.ExitCode != utilsType.EXIT_CODE_OK {
 		return false
 	}
 	// 将代码文件打包为 main.tar
@@ -84,7 +84,7 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	copyStatus := copyFileToContainer(containerId, userCodeFilePath, uuid)
 	if !copyStatus {
 		return []dto.ExecuteMessage{{
-			ExitCode:     EXIT_CODE_ERROR,
+			ExitCode:     utilsType.EXIT_CODE_BASE_ERROR,
 			ErrorMessage: "System error",
 		}}
 	}
@@ -96,7 +96,8 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	workDir := WORDING_DIR + "/" + uuid
 	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "", "compile")
 	log.Infof("compileRes:%v", compileRes)
-	if compileRes.ExitCode == EXIT_CODE_ERROR {
+	if compileRes.ExitCode != utilsType.EXIT_CODE_OK {
+		compileRes.ExitCode = utilsType.EXIT_CODE_COMPILE_ERROR
 		compileRes.ErrorMessage = "Compile fail"
 		return []dto.ExecuteMessage{compileRes}
 	}
@@ -156,7 +157,7 @@ func (sandbox *SandBox) saveFile(code string) (fs.File, string) {
 	return file, codeFilename
 }
 
-func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) dto.ExecuteCodeResponse {
+func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) []dto.ExecuteMessage {
 	// 1. 保存用户代码为文件
 	code := executeCodeRequest.Code
 	_, codeFilePath := sandbox.saveFile(code)
@@ -167,6 +168,6 @@ func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) 
 	inputList := executeCodeRequest.InputList
 	executeMessageArrayList := sandbox.compileAndRun(language, codeFilePath, inputList)
 	// 3. 整理输出信息
-	executeCodeResponse := getOutputResponse(executeMessageArrayList)
-	return executeCodeResponse
+	executeMessages := getOutputMessage(executeMessageArrayList)
+	return executeMessages
 }
