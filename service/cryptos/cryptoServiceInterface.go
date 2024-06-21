@@ -1,22 +1,12 @@
 package cryptos
 
-import (
-	"crypto/rsa"
-)
-
 type CryptoServiceInterface interface {
-	// 生成密钥对
-	generatePrivateKey() *rsa.PrivateKey
-	GenerateKeyPairBase64() (string, string)
-
-	// 从私钥字符串中还原密钥对
-	getPrivateKeyFromBase64(base64PrivateKey string) *rsa.PrivateKey
+	// 生成密钥对，并将私钥和公钥转为 base64
+	GenerateRSAKeyPairBase64() (string, string, error)
 
 	// 使用公钥加密数据
-	EncryptedFromPulicStr(originData string, base64PublicKey string) string
-	encryptedFromPulic(originData string, base64PublicKey string) string
+	EncryptWithPublicKeyBase64(publicKeyBase64, originData string) (string, error)
 
 	// 使用私钥解密数据
-	DecryptedFromPrivateStr(encryptedData string, base64PrivateKey string)
-	decryptedFromPrivate(encryptedData string, base64PrivateKey string)
+	DecryptWithPrivateKeyBase64(privateKeyBase64, encryptedBase64 string) (string, error)
 }
