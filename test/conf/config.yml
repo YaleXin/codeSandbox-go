@@ -11,7 +11,7 @@ Server:
     Port: 3307
     User: root
     PassWord: 123456
-    Name: qiublog
+    Name: code_sandbox_data
     Redis:
       Host: localhost
       Port: 6379
@@ -75,4 +75,4 @@ DockerInfoList:
     ContainerCount: 3
     Filename: Main.go
     CompileCmd: "go build Main.go"
-    RunCmd: "./main"
+    RunCmd: "./Main"
