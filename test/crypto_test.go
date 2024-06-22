@@ -1,7 +1,7 @@
 package test
 
 import (
-	"codeSandbox/service/cryptos"
+	"codeSandbox/service/cryptoServices"
 	"github.com/go-playground/assert/v2"
 	"github.com/sirupsen/logrus"
 
@@ -12,7 +12,7 @@ func TestEncryptoAndDecrypto(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 	origidata := "hello codesandbox"
 
-	var cryptoService cryptos.CryptoServiceInterface = new(cryptos.CryptoService)
+	var cryptoService cryptoServices.CryptoServiceInterface = new(cryptoServices.CryptoService)
 	publicKeyBase64, privateKeyBase64, err := cryptoService.GenerateRSAKeyPairBase64()
 	if err != nil {
 		t.Errorf("GenerateRSAKeyPairBase64 fail: %v", err)

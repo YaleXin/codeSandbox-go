@@ -1,9 +1,9 @@
-package service
+package sandboxServices
 
 import (
 	dto "codeSandbox/model/dto"
 	"codeSandbox/model/vo"
-	"codeSandbox/service/sandbox"
+	"codeSandbox/service/sandboxDockerServices"
 	"codeSandbox/utils"
 )
 
@@ -22,7 +22,7 @@ func (sandboxService *SandboxService) ExecuteCode(executeCodeRequest dto.Execute
 	// 找出该语言对应的 dockerinfo 对象
 	language := executeCodeRequest.Language
 	byLanguage := getDockerInfoByLanguage(language)
-	box := sandbox.SandBox{
+	box := sandboxDockerServices.SandBox{
 		DockerInfo: byLanguage,
 	}
 

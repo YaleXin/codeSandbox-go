@@ -85,3 +85,26 @@ func TestUserDelete(t *testing.T) {
 	}
 	assert.NotEqual(t, newUser.DeletedAt.Valid, true)
 }
+
+func TestUserFindByName(t *testing.T) {
+	newUser := model.User{
+		Username: "original",
+		Password: "password",
+		Salt:     "salt",
+		Role:     11,
+	}
+	userDao := db.UserDao{}
+	_, err := userDao.UserAdd(&newUser)
+	username := newUser.Username
+	t.Logf("insert username : %v", username)
+	if err != nil {
+		t.Fatalf("add")
+	}
+	user := model.User{Username: newUser.Username}
+	byName, err := userDao.GetUserByName(&user)
+	if err != nil {
+		t.Fatalf("GetUserByName")
+	}
+	t.Logf("byName:%v", byName)
+	assert.NotEqual(t, byName.ID, uint(0))
+}

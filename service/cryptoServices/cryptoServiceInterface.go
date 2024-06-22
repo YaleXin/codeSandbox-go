@@ -1,4 +1,4 @@
-package cryptos
+package cryptoServices
 
 type CryptoServiceInterface interface {
 	// 生成密钥对，并将私钥和公钥转为 base64

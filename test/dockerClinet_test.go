@@ -1,7 +1,7 @@
 package test
 
 import (
-	"codeSandbox/service/sandbox"
+	"codeSandbox/service/sandboxDockerServices"
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -12,7 +12,7 @@ import (
 func TestDockerClineInit(t *testing.T) {
 	// 在测试开始前设置日志级别
 	logrus.SetLevel(logrus.DebugLevel)
-	client := sandbox.DockerClient
+	client := sandboxDockerServices.DockerClient
 	logrus.Debugf("docker client:%v", client)
 
 	err := getImageList(client)
@@ -40,6 +40,6 @@ func TestRunCmd(t *testing.T) {
 	//logrus.SetLevel(logrus.DebugLevel)
 	//containerId := "3d4b12914099"
 
-	//runCmdByContainer := sandbox.runCmdByContainer(containerId, []string{"./Main"}, "/tmp")
+	//runCmdByContainer := sandboxService.runCmdByContainer(containerId, []string{"./Main"}, "/tmp")
 	//logrus.Debugf("runCmdByContainer: %v", runCmdByContainer)
 }

@@ -28,6 +28,15 @@ func (u *UserDao) ListUser() ([]model.User, error) {
 	}
 	return users, nil
 }
+
+func (u *UserDao) GetUserByName(user *model.User) (*model.User, error) {
+	first := dBClinet.Where(&model.User{Username: user.Username}).First(&user)
+	err := first.Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
 func (u *UserDao) GetUserById(user *model.User, id uint) (*model.User, error) {
 	first := dBClinet.First(user, id)
 	err := first.Error

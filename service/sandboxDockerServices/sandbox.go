@@ -1,4 +1,4 @@
-package sandbox
+package sandboxDockerServices
 
 import (
 	"codeSandbox/model/dto"

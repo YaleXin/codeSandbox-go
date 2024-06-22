@@ -1,4 +1,4 @@
-package cryptos
+package cryptoServices
 
 import (
 	"crypto/rand"

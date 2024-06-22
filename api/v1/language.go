@@ -2,7 +2,7 @@ package api_v1
 
 import (
 	baseRes "codeSandbox/responses"
-	sandboxService "codeSandbox/service/service_v1"
+	sandboxService "codeSandbox/service/sandboxServices"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"

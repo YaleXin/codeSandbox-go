@@ -3,7 +3,7 @@ package api_v1
 import (
 	"codeSandbox/model/dto"
 	baseRes "codeSandbox/responses"
-	service "codeSandbox/service/service_v1"
+	service "codeSandbox/service/sandboxServices"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

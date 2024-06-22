@@ -3,7 +3,7 @@ package test
 import (
 	"bytes"
 	"codeSandbox/model/dto"
-	"codeSandbox/service/sandbox"
+	"codeSandbox/service/sandboxDockerServices"
 	"codeSandbox/utils"
 	"fmt"
 	"github.com/go-playground/assert/v2"
@@ -64,7 +64,7 @@ func TestExecuteTimeoutCode(t *testing.T) {
 	logrus.Debugf("runRes:%v", response)
 	for _, executeMsg := range response {
 		assert.Equal(t, executeMsg.ExitCode, utils.EXIT_CODE_TIME_OUT)
-		assert.Equal(t, executeMsg.ErrorMessage, sandbox.ERR_MSG_TIME_OUT)
+		assert.Equal(t, executeMsg.ErrorMessage, sandboxDockerServices.ERR_MSG_TIME_OUT)
 		assert.Equal(t, executeMsg.Message, "")
 	}
 
@@ -108,7 +108,7 @@ func execode(code string, inputList []string) []dto.ExecuteMessage {
 		Language:  "Go",
 		InputList: inputList,
 	}
-	sandbox := sandbox.SandBox{
+	sandbox := sandboxDockerServices.SandBox{
 		DockerInfo: utils.DockerInfo{
 			Language:       "Go",
 			ImageName:      "golang:1.17",
