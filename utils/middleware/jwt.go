@@ -3,6 +3,7 @@ package middleware
 import (
 	"codeSandbox/utils"
 	"codeSandbox/utils/errmsg"
+	"codeSandbox/utils/global"
 	"github.com/golang-jwt/jwt"
 	"time"
 )
@@ -34,7 +35,7 @@ func SetToken(id uint, username string, role int) (string, int) {
 	if err != nil {
 		return "", errmsg.ERROR
 	}
-	return token, errmsg.SUCCESS
+	return token, global.SUCCESS
 }
 
 // CheckToken 验证token

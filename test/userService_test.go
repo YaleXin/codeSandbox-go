@@ -3,6 +3,7 @@ package test
 import (
 	"codeSandbox/model"
 	"codeSandbox/service/userServices"
+	"codeSandbox/utils/global"
 	"codeSandbox/utils/tool"
 	"github.com/go-playground/assert/v2"
 	"testing"
@@ -36,4 +37,23 @@ func TestExistUserRegister(t *testing.T) {
 	err := userService.UserRegister(&user)
 	assert.NotEqual(t, err, nil)
 
+}
+
+func TestUserLogin(t *testing.T) {
+	passwd := tool.GenerateRandomVisibleString(10)
+	username := tool.GenerateRandomVisibleString(10)
+	user := model.User{
+		Username: username,
+		Password: passwd,
+	}
+	userService := userServices.UserService{}
+	err := userService.UserRegister(&user)
+	assert.Equal(t, err, nil)
+	loginUser := model.User{
+		Username: user.Username,
+		Password: passwd,
+	}
+	login, _, jwt := userService.UserLogin(&loginUser)
+	assert.Equal(t, login, global.SUCCESS)
+	assert.NotEqual(t, jwt, "")
 }

@@ -4,6 +4,7 @@ import (
 	"codeSandbox/db"
 	"codeSandbox/model"
 	"codeSandbox/utils/global"
+	"codeSandbox/utils/middleware"
 	"codeSandbox/utils/tool"
 )
 
@@ -16,8 +17,39 @@ const ADMIN_USER_ROLE = int(2)
 type UserService struct {
 }
 
-func (userService *UserService) UserLogin(user model.User) bool {
-	return false
+func verifyPwd(submitUser, databaseUser *model.User) bool {
+	return encryptPwdWithSalt(submitUser.Password, databaseUser.Salt) == databaseUser.Password
+}
+func (userService *UserService) UserList() (int, []model.User) {
+	user, err := userDao.ListUser()
+	if err != nil {
+		return global.SYSTEM_ERROR, nil
+	}
+	return global.SUCCESS, user
+}
+
+// 返回执行结果，用户id， jwt token
+func (userService *UserService) UserLogin(submitUser *model.User) (int, uint, string) {
+	if !checkUser(submitUser) {
+		return global.PARAMS_ERROR, 0, ""
+	}
+	// 查询数据库中该用户信息
+	databaseUser := model.User{
+		Username: submitUser.Username,
+	}
+	_, err := userDao.GetUserByName(&databaseUser)
+	if err != nil {
+		return global.NOT_FOUND_USER_ERROR, 0, ""
+	}
+	if !verifyPwd(submitUser, &databaseUser) {
+		return global.PWD_ERROR, 0, ""
+	}
+	token, tCode := middleware.SetToken(databaseUser.ID, databaseUser.Username, databaseUser.Role)
+	if tCode != global.SUCCESS {
+		return tCode, 0, ""
+
+	}
+	return global.SUCCESS, databaseUser.ID, token
 }
 
 func (userService *UserService) UserLogout(user model.User) bool {
@@ -42,8 +74,8 @@ func (userService *UserService) UserRegister(user *model.User) error {
 	// 查不到时候会报 error
 	if err == nil {
 		return &global.CustomError{
-			ErrorCode: global.DATA_REPEAT,
-			Message:   global.GetErrMsg(global.DATA_REPEAT),
+			ErrorCode: global.DATA_REPEAT_ERROR,
+			Message:   global.GetErrMsg(global.DATA_REPEAT_ERROR),
 		}
 	}
 
