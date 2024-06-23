@@ -17,6 +17,8 @@ const ADMIN_USER_ROLE = int(2)
 type UserService struct {
 }
 
+var UserServiceInstance UserService
+
 func verifyPwd(submitUser, databaseUser *model.User) bool {
 	return encryptPwdWithSalt(submitUser.Password, databaseUser.Salt) == databaseUser.Password
 }
@@ -63,20 +65,14 @@ func encryptPwdWithSalt(pwd string, salt string) string {
 	return tool.MD5Str(pwd + salt)
 }
 
-func (userService *UserService) UserRegister(user *model.User) error {
+func (userService *UserService) UserRegister(user *model.User) int {
 	if !checkUser(user) {
-		return &global.CustomError{
-			ErrorCode: global.PARAMS_ERROR,
-			Message:   global.GetErrMsg(global.PARAMS_ERROR),
-		}
+		return global.PARAMS_ERROR
 	}
 	_, err := userDao.GetUserByName(user)
 	// 查不到时候会报 error
 	if err == nil {
-		return &global.CustomError{
-			ErrorCode: global.DATA_REPEAT_ERROR,
-			Message:   global.GetErrMsg(global.DATA_REPEAT_ERROR),
-		}
+		return global.DATA_REPEAT_ERROR
 	}
 
 	// 使用盐进行加密
@@ -88,12 +84,9 @@ func (userService *UserService) UserRegister(user *model.User) error {
 	user.Role = NORMAL_USER_ROLE
 	_, err = userDao.UserAdd(user)
 	if err != nil {
-		return &global.CustomError{
-			ErrorCode: global.SYSTEM_ERROR,
-			Message:   global.GetErrMsg(global.SYSTEM_ERROR),
-		}
+		return global.SYSTEM_ERROR
 	}
-	return nil
+	return global.SUCCESS
 }
 
 func (userService *UserService) UserDelete(user *model.User) (*model.User, error) {

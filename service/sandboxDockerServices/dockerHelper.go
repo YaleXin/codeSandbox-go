@@ -309,13 +309,15 @@ func initImagesAndContainer() {
 	go initContainer(&list)
 }
 func init() {
+	log.Infof("init docker")
 	docker, err := connectDocker()
 	if err != nil {
 		log.Panicf("init docker fail:%v", err)
 		return
 	}
 	DockerClient = docker
-	go initImagesAndContainer()
+	// TODO 需要用docker时候，将下面开启
+	//go initImagesAndContainer()
 }
 func connectDocker() (cli *client.Client, err error) {
 	dockerConfig := utils.Config.SandboxMachine

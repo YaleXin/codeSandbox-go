@@ -4,8 +4,8 @@ import "fmt"
 
 // 自定义错误类型
 type CustomError struct {
-	ErrorCode int
-	Message   string
+	ErrorCode int    `json:"errorCode"`
+	Message   string `json:"message"`
 }
 
 // 实现error接口的Error方法
