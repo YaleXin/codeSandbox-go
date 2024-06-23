@@ -3,6 +3,7 @@ package userServices
 import (
 	"codeSandbox/db"
 	"codeSandbox/model"
+	"codeSandbox/model/vo"
 	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
 	"codeSandbox/utils/tool"
@@ -31,9 +32,9 @@ func (userService *UserService) UserList() (int, []model.User) {
 }
 
 // 返回执行结果，用户id， jwt token
-func (userService *UserService) UserLogin(submitUser *model.User) (int, uint, string) {
+func (userService *UserService) UserLogin(submitUser *model.User) (int, *vo.UserVO) {
 	if !checkUser(submitUser) {
-		return global.PARAMS_ERROR, 0, ""
+		return global.PARAMS_ERROR, nil
 	}
 	// 查询数据库中该用户信息
 	databaseUser := model.User{
@@ -41,17 +42,25 @@ func (userService *UserService) UserLogin(submitUser *model.User) (int, uint, st
 	}
 	_, err := userDao.GetUserByName(&databaseUser)
 	if err != nil {
-		return global.NOT_FOUND_USER_ERROR, 0, ""
+		return global.NOT_FOUND_USER_ERROR, nil
 	}
 	if !verifyPwd(submitUser, &databaseUser) {
-		return global.PWD_ERROR, 0, ""
+		return global.PWD_ERROR, nil
 	}
 	token, tCode := middleware.SetToken(databaseUser.ID, databaseUser.Username, databaseUser.Role)
 	if tCode != global.SUCCESS {
-		return tCode, 0, ""
+		return tCode, nil
 
 	}
-	return global.SUCCESS, databaseUser.ID, token
+	var userVO vo.UserVO
+	getUserVO(&databaseUser, token, &userVO)
+	return global.SUCCESS, &userVO
+}
+func getUserVO(user *model.User, token string, userVO *vo.UserVO) {
+	userVO.Id = user.ID
+	userVO.Username = user.Username
+	userVO.Role = user.Role
+	userVO.Token = token
 }
 
 func (userService *UserService) UserLogout(user model.User) bool {

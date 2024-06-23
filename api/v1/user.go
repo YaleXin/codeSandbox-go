@@ -17,12 +17,6 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
 		return
 	}
-	if data.Username == "" || data.Password == "" {
-		c.JSON(http.StatusOK, baseRes.Err.WithData(&global.CustomError{
-			ErrorCode: global.PARAMS_ERROR,
-			Message:   global.GetErrMsg(global.PARAMS_ERROR),
-		}))
-	}
 
 	instance := &userServices.UserServiceInstance
 	errCode := instance.UserRegister(&data)
@@ -42,5 +36,18 @@ func Login(c *gin.Context) {
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
+		return
 	}
+
+	instance := &userServices.UserServiceInstance
+	code, userVO := instance.UserLogin(&data)
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.Err.WithData(&global.CustomError{
+			ErrorCode: code,
+			Message:   global.GetErrMsg(code),
+		}))
+		return
+	}
+
+	c.JSON(http.StatusOK, baseRes.OK.WithData(userVO))
 }
