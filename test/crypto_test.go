@@ -14,6 +14,7 @@ func TestEncryptoAndDecrypto(t *testing.T) {
 
 	var cryptoService cryptoServices.CryptoServiceInterface = new(cryptoServices.CryptoService)
 	publicKeyBase64, privateKeyBase64, err := cryptoService.GenerateRSAKeyPairBase64()
+	t.Logf("publicKeyBase64 len: %v, privateKeyBase64 len: %v", len(publicKeyBase64), len(privateKeyBase64))
 	if err != nil {
 		t.Errorf("GenerateRSAKeyPairBase64 fail: %v", err)
 	}

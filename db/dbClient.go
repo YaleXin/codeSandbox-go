@@ -31,6 +31,7 @@ func init() {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
+		DisableForeignKeyConstraintWhenMigrating: true, // 数据迁移时不生成外键
 	})
 	if err != nil {
 		log.Panic(fmt.Sprintf("database connect fail,%s", err))
@@ -41,6 +42,8 @@ func init() {
 	}
 	// TODO 添加所有的结构体
 	err = dBClinet.AutoMigrate(&model.User{})
+	err = dBClinet.AutoMigrate(&model.KeyPair{})
+
 	if err != nil {
 		log.Panic(fmt.Sprintf("database migrate fail,%s", err))
 	}
