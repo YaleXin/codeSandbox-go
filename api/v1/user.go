@@ -52,6 +52,21 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, baseRes.OK.WithData(userVO))
 }
 
+func NewKey(c *gin.Context) {
+	instance := &userServices.UserServiceInstance
+	code, vo := instance.GenerateKeyPair(c)
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.Err.WithData(&global.CustomError{
+			ErrorCode: code,
+			Message:   global.GetErrMsg(code),
+		}))
+		return
+	} else {
+		c.JSON(http.StatusOK, baseRes.OK.WithData(vo))
+		return
+	}
+}
+
 func KeyList(c *gin.Context) {
 	instance := &userServices.UserServiceInstance
 	code, pairs := instance.GetUserKeys(c)

@@ -22,5 +22,6 @@ func UserGroup(r *gin.Engine) {
 		// 密钥对列表
 		needLogin.GET("user/keys", api_v1.KeyList)
 		// 生成密钥
+		needLogin.POST("user/newKey", api_v1.NewKey)
 	}
 }

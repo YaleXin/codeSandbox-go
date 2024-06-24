@@ -53,6 +53,9 @@ func getLoginUser(c *gin.Context) (int, *model.User) {
 func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO) {
 	// 获取当前登录用户
 	code, loginUser := getLoginUser(c)
+	if code != global.SUCCESS {
+		return code, nil
+	}
 	// 查出该用户拥有的密钥对
 	keypairServiceInstance := &keypairService.KeyPairServiceInstance
 	code, keyPairVOs := keypairServiceInstance.GetUserKeys(loginUser)
@@ -128,6 +131,27 @@ func (userService *UserService) UserRegister(user *model.User) int {
 		return global.SYSTEM_ERROR
 	}
 	return global.SUCCESS
+}
+func (userService *UserService) GenerateKeyPair(c *gin.Context) (int, *vo.KeyPairVO) {
+	// 获取当前登录用户
+	code, loginUser := getLoginUser(c)
+	if code != global.SUCCESS {
+		return code, nil
+	}
+	keypairServiceInstance := &keypairService.KeyPairServiceInstance
+	code, keyPair := keypairServiceInstance.GenerateUserKey(loginUser)
+	if code != global.SUCCESS {
+		return code, nil
+	}
+	// 自行封装成 VO
+	pairVO := vo.KeyPairVO{
+		ID:        keyPair.ID,
+		SecretKey: keyPair.SecretKey,
+		AccessKey: keyPair.AccessKey,
+		UserId:    loginUser.ID,
+		CreatedAt: keyPair.CreatedAt,
+	}
+	return global.SUCCESS, &pairVO
 }
 
 func (userService *UserService) UserDelete(user *model.User) (*model.User, error) {
