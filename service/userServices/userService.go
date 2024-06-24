@@ -4,6 +4,7 @@ import (
 	"codeSandbox/db"
 	"codeSandbox/model"
 	"codeSandbox/model/vo"
+	"codeSandbox/service/keypairService"
 	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
 	"codeSandbox/utils/tool"
@@ -12,7 +13,6 @@ import (
 )
 
 var userDao db.UserDao
-var keyPairDao db.KeyPairDao
 
 const SALT_LEN = 20
 
@@ -51,15 +51,15 @@ func getLoginUser(c *gin.Context) (int, *model.User) {
 
 }
 func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO) {
+	// 获取当前登录用户
 	code, loginUser := getLoginUser(c)
+	// 查出该用户拥有的密钥对
+	keypairServiceInstance := &keypairService.KeyPairServiceInstance
+	code, keyPairVOs := keypairServiceInstance.GetUserKeys(loginUser)
 	if code != global.SUCCESS {
 		return code, nil
 	}
-	keys, err := keyPairDao.ListKeyPairByUserId(loginUser.ID)
-	if err != nil {
-		return global.SYSTEM_ERROR, nil
-	}
-	return global.SUCCESS, getKeyPairsVO(keys)
+	return global.SUCCESS, keyPairVOs
 }
 
 // 返回执行结果，用户id， jwt token
@@ -88,19 +88,6 @@ func (userService *UserService) UserLogin(submitUser *model.User) (int, *vo.User
 	return global.SUCCESS, &userVO
 }
 
-// 将密钥对切片转为脱敏后的信息
-func getKeyPairsVO(keys []model.KeyPair) []vo.KeyPairVO {
-	pairVO := make([]vo.KeyPairVO, 0, len(keys))
-	for _, keypair := range keys {
-		pairVO = append(pairVO, vo.KeyPairVO{
-			ID:        keypair.ID,
-			AccessKey: keypair.AccessKey,
-			SecretKey: keypair.SecretKey,
-			UserId:    keypair.UserId,
-		})
-	}
-	return pairVO
-}
 func getUserVO(user *model.User, token string, userVO *vo.UserVO) {
 	userVO.Id = user.ID
 	userVO.Username = user.Username
