@@ -7,13 +7,14 @@ import (
 	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
 	"codeSandbox/utils/tool"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 var userDao db.UserDao
+var keyPairDao db.KeyPairDao
 
 const SALT_LEN = 20
-const NORMAL_USER_ROLE = int(1)
-const ADMIN_USER_ROLE = int(2)
 
 type UserService struct {
 }
@@ -29,6 +30,36 @@ func (userService *UserService) UserList() (int, []model.User) {
 		return global.SYSTEM_ERROR, nil
 	}
 	return global.SUCCESS, user
+}
+func getLoginUser(c *gin.Context) (int, *model.User) {
+	get, exists := c.Get("user")
+	if !exists {
+		return global.NOT_LOGIN_ERROR, nil
+	}
+	// 使用类型断言转换为 MyClaims
+	if myClaims, ok := get.(*middleware.MyClaims); ok {
+		return global.SUCCESS, &model.User{
+			Model: gorm.Model{
+				ID: myClaims.UserId,
+			},
+			Username: myClaims.Username,
+		}
+	} else {
+		// 断言失败，anyValue不是 MyClaims 类型
+		return global.SYSTEM_ERROR, nil
+	}
+
+}
+func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO) {
+	code, loginUser := getLoginUser(c)
+	if code != global.SUCCESS {
+		return code, nil
+	}
+	keys, err := keyPairDao.ListKeyPairByUserId(loginUser.ID)
+	if err != nil {
+		return global.SYSTEM_ERROR, nil
+	}
+	return global.SUCCESS, getKeyPairsVO(keys)
 }
 
 // 返回执行结果，用户id， jwt token
@@ -55,6 +86,20 @@ func (userService *UserService) UserLogin(submitUser *model.User) (int, *vo.User
 	var userVO vo.UserVO
 	getUserVO(&databaseUser, token, &userVO)
 	return global.SUCCESS, &userVO
+}
+
+// 将密钥对切片转为脱敏后的信息
+func getKeyPairsVO(keys []model.KeyPair) []vo.KeyPairVO {
+	pairVO := make([]vo.KeyPairVO, 0, len(keys))
+	for _, keypair := range keys {
+		pairVO = append(pairVO, vo.KeyPairVO{
+			ID:        keypair.ID,
+			AccessKey: keypair.AccessKey,
+			SecretKey: keypair.SecretKey,
+			UserId:    keypair.UserId,
+		})
+	}
+	return pairVO
 }
 func getUserVO(user *model.User, token string, userVO *vo.UserVO) {
 	userVO.Id = user.ID
@@ -90,7 +135,7 @@ func (userService *UserService) UserRegister(user *model.User) int {
 
 	user.Password = md5Str
 	user.Salt = salt
-	user.Role = NORMAL_USER_ROLE
+	user.Role = global.NORMAL_USER_ROLE
 	_, err = userDao.UserAdd(user)
 	if err != nil {
 		return global.SYSTEM_ERROR

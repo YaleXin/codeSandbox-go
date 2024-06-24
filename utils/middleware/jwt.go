@@ -4,25 +4,28 @@ import (
 	"codeSandbox/utils"
 	"codeSandbox/utils/errmsg"
 	"codeSandbox/utils/global"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"net/http"
 	"time"
 )
 
 var JwtKey = []byte(utils.Config.Server.JwtKey)
 var code int
 
+// jwt 中要加密的内容
 type MyClaims struct {
-	Id       uint   `json:"id"`
+	UserId   uint   `json:"userId"`
 	Username string `json:"username"`
 	Role     int    `json:"role"`
 	jwt.StandardClaims
 }
 
 // SetToken 生成token
-func SetToken(id uint, username string, role int) (string, int) {
+func SetToken(userId uint, username string, role int) (string, int) {
 	expireTime := time.Now().Add(time.Hour * 24 * 3)
 	SetClaims := MyClaims{
-		id,
+		userId,
 		username,
 		role,
 		jwt.StandardClaims{
@@ -55,8 +58,8 @@ func CheckToken(token string) (*MyClaims, int) {
 
 // JwtToken jwt中间件
 // 参数： termination 是否中断(true:没权限直接静止访问,false:没权限只返回部分字段)
-/*
-func JwtToken(termination bool, role int) gin.HandlerFunc {
+
+func JwtToken(termination bool, needRole int) gin.HandlerFunc {
 	cRes := func(c *gin.Context, code int) {
 		if termination {
 			c.JSON(http.StatusOK, gin.H{
@@ -74,29 +77,27 @@ func JwtToken(termination bool, role int) gin.HandlerFunc {
 			cRes(c, code)
 			return
 		}
-		key, tCode := CheckToken(ckToken)
+		keyData, tCode := CheckToken(ckToken)
 		if tCode == errmsg.ERROR {
 			//认证字符串判断 !内容不对
 			code = errmsg.ERROR_TOKEN_WRONG
 			cRes(c, code)
 			return
 		}
-		if key.Role < role {
+		if keyData.Role > needRole {
 			//认证字符串 权限不够
 			code = errmsg.ERROR_ROLE_LOW
 			cRes(c, code)
 			return
 		}
-		if time.Now().Unix() > key.ExpiresAt {
+		if time.Now().Unix() > keyData.ExpiresAt {
 			//认证字符串时间判断 !过期
 			code = errmsg.ERROR_TOKEN_RUNTIME
 			cRes(c, code)
 			return
 		}
-
-		c.Set("id", key.Id)
-		c.Set("role", key.Role)
+		// 将 user 保存起来，后续用得到
+		c.Set("user", keyData)
 		c.Next()
 	}
 }
-*/
