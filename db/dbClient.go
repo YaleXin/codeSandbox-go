@@ -43,6 +43,7 @@ func init() {
 	// TODO 添加所有的结构体
 	err = dBClinet.AutoMigrate(&model.User{})
 	err = dBClinet.AutoMigrate(&model.KeyPair{})
+	err = dBClinet.AutoMigrate(&model.Execution{})
 
 	if err != nil {
 		log.Panic(fmt.Sprintf("database migrate fail,%s", err))
