@@ -14,6 +14,8 @@ const RSA_LEN int = 2048
 type CryptoService struct {
 }
 
+var CryptoServiceInstance CryptoService
+
 // 生成RSA密钥对，并将公钥和私钥分别转为Base64字符串
 func (service *CryptoService) GenerateRSAKeyPairBase64() (string, string, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, RSA_LEN)

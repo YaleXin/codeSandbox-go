@@ -6,6 +6,7 @@ import (
 	"codeSandbox/model/vo"
 	"codeSandbox/service/cryptoServices"
 	"codeSandbox/utils/global"
+	"codeSandbox/utils/tool"
 )
 
 var keyPairDao db.KeyPairDao
@@ -15,6 +16,16 @@ type KeyPairService struct {
 
 var KeyPairServiceInstance KeyPairService
 
+func (keyPairService *KeyPairService) GetKeyPairByPublicKey(publicKey string) (int, *model.KeyPair) {
+	if tool.IsBlankString(publicKey) {
+		return global.PARAMS_ERROR, nil
+	}
+	key, err := keyPairDao.GetKeyPairByPublicKey(publicKey)
+	if err != nil {
+		return global.NOT_FOUND_ERROR, nil
+	}
+	return global.SUCCESS, key
+}
 func (keyPairService *KeyPairService) GetUserKeys(loginUser *model.User) (int, []vo.KeyPairVO) {
 
 	keys, err := keyPairDao.ListKeyPairByUserId(loginUser.ID)

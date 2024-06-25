@@ -15,6 +15,15 @@ func (k *KeyPairDao) ListKeyPair() ([]model.KeyPair, error) {
 	}
 	return keyPairs, nil
 }
+func (k *KeyPairDao) GetKeyPairByPublicKey(publicKey string) (*model.KeyPair, error) {
+	var keyPair model.KeyPair
+	first := dBClinet.Where(&model.KeyPair{AccessKey: publicKey}).First(&keyPair)
+	err := first.Error
+	if err != nil {
+		return nil, err
+	}
+	return &keyPair, nil
+}
 
 func (k *KeyPairDao) ListKeyPairByUserId(userId uint) ([]model.KeyPair, error) {
 	var keyPairs []model.KeyPair

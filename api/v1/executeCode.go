@@ -4,6 +4,7 @@ import (
 	"codeSandbox/model/dto"
 	baseRes "codeSandbox/responses"
 	service "codeSandbox/service/sandboxServices"
+	"codeSandbox/utils/global"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -25,6 +26,22 @@ func ExecuteCode(c *gin.Context) {
 		sandboxService := service.SandboxService{}
 		executeCode := sandboxService.ExecuteCode(exeRequest)
 		c.JSON(http.StatusOK, baseRes.OK.WithData(executeCode))
+	} else {
+		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
+	}
+}
+
+func ProgramExecuteCode(c *gin.Context) {
+	var programExecuteCodeRequest dto.ProgramExecuteCodeRequest
+	if c.ShouldBind(&programExecuteCodeRequest) == nil && programExecuteCodeRequest.PublicKey != "" && programExecuteCodeRequest.PublicKey != "" {
+		sandboxService := service.SandboxService{}
+		code, executeCode := sandboxService.ProgramExecuteCode(&programExecuteCodeRequest)
+		if code != global.SUCCESS {
+			c.JSON(http.StatusOK, baseRes.Err.WithData(global.GetErrMsg(code)))
+			return
+		} else {
+			c.JSON(http.StatusOK, baseRes.OK.WithData(executeCode))
+		}
 	} else {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
 	}

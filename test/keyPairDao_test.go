@@ -24,9 +24,9 @@ func TestKeyPairDaoAdd(t *testing.T) {
 
 	keyPairDao := db.KeyPairDao{}
 	service := cryptoServices.CryptoService{}
-	pub, pri, err := service.GenerateRSAKeyPairBase64()
+	pub, pri, errO := service.GenerateRSAKeyPairBase64()
 	t.Logf("len pri:%v, len pub:%v", len(pri), len(pub))
-	if err != nil {
+	if errO != nil {
 		t.Errorf("%v", err)
 	}
 	keyPair := model.KeyPair{
@@ -35,13 +35,13 @@ func TestKeyPairDaoAdd(t *testing.T) {
 		User:      user,
 		UserId:    user.ID,
 	}
-	_, err = keyPairDao.KeyPairAdd(&keyPair)
-	if err != nil {
+	_, errO = keyPairDao.KeyPairAdd(&keyPair)
+	if errO != nil {
 		t.Fatalf("%v", err)
 	}
 
-	keys, err := keyPairDao.ListKeyPairByUserId(user.ID)
-	if err != nil {
+	keys, errO := keyPairDao.ListKeyPairByUserId(user.ID)
+	if errO != nil {
 		t.Fatalf("%v", err)
 	}
 	t.Logf("keys %v", keys)

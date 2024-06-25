@@ -17,7 +17,7 @@ func TestUserRegister(t *testing.T) {
 	}
 	userService := userServices.UserService{}
 	err := userService.UserRegister(&user)
-	if err != nil {
+	if err != global.SUCCESS {
 		t.Errorf("err:%v", err)
 	}
 	if tool.IsBlankString(user.Salt) {
@@ -53,7 +53,6 @@ func TestUserLogin(t *testing.T) {
 		Username: user.Username,
 		Password: passwd,
 	}
-	login, _, jwt := userService.UserLogin(&loginUser)
+	login, _ := userService.UserLogin(&loginUser)
 	assert.Equal(t, login, global.SUCCESS)
-	assert.NotEqual(t, jwt, "")
 }

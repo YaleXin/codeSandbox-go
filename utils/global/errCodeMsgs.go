@@ -14,6 +14,7 @@ const (
 	FORBIDDEN_ERROR      = 40300
 	SYSTEM_ERROR         = 50000
 	OPERATION_ERROR      = 50001
+	KEY_PAIR_ERROR       = 50002
 	API_REQUEST_ERROR    = 50020
 )
 
@@ -31,6 +32,7 @@ var codemsg = map[int]string{
 	FORBIDDEN_ERROR:      "禁止访问",
 	SYSTEM_ERROR:         "系统内部异常",
 	OPERATION_ERROR:      "操作失败",
+	KEY_PAIR_ERROR:       "密钥错误",
 	API_REQUEST_ERROR:    "外部API调用失败",
 }
 
