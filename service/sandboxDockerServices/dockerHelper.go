@@ -117,6 +117,13 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 	}
 
 	log.Debugf("read data from stdout finish...")
+	// 注意，有可能程序是超时完成，如果是超时完成， msgChannel 已经被关闭了
+	// 尝试往已经关闭的管道中写入数据会 panic ，因此要恢复
+	defer func() {
+		if r := recover(); r != nil {
+			log.Warnf("Recovered from panic at containerRunCmd: %v", r)
+		}
+	}()
 	msgChannel <- executeMessage
 }
 

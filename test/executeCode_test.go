@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"github.com/go-playground/assert/v2"
 	"github.com/sirupsen/logrus"
+	"io/fs"
+	"os"
 	"testing"
 )
 
@@ -127,7 +129,13 @@ func execode(code string, inputList []string) []dto.ExecuteMessage {
 
 func TestProgramExecuteCode(t *testing.T) {
 	//code := "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\tsum := a + b\n\tsliceNums := make([]int, 0, 0)\n\tfor i := 0; i < sum; i++ {\n\t\tsliceNums = append(sliceNums, i)\n\t}\n\tfmt.Println(sum)\n}\n"
-	code := "gggggg"
+	// 读取代码
+	data, err := fs.ReadFile(os.DirFS("C:\\Users\\Yalexin\\GolandProjects\\codeSandbox\\inner_test\\demo"), "main.go")
+	if err != nil {
+		t.Fatalf("%v", err)
+		return
+	}
+	code := string(data)
 	inputList := []string{"1 99999\n"}
 	codeRequest := dto.ExecuteCodeRequest{
 		Code:      code,

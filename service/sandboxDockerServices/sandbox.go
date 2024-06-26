@@ -23,11 +23,13 @@ const ERR_MSG_TIME_OUT string = "TIMEOUT"
 const RUN_CODE_TIME_OUT = 5 * time.Second
 
 func clearFile(codeFilename string) {
-	err := os.Remove(codeFilename)
+
+	dir := filepath.Dir(codeFilename)
+	err := os.RemoveAll(dir)
 	if err != nil {
-		log.Errorf("Remove code file fail:%v", err)
+		log.Errorf("Remove dir %v fail:%v", dir, err)
 	}
-	log.Debugf("clear file finish, codeFilename:%v", codeFilename)
+	log.Debugf("clear file finish, dir :%v", dir)
 }
 func getOutputMessage(executeMessageArrayList []dto.ExecuteMessage) []dto.ExecuteMessage {
 	executeMessages := make([]dto.ExecuteMessage, 0, 0)
@@ -161,8 +163,8 @@ func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) 
 	// 1. 保存用户代码为文件
 	code := executeCodeRequest.Code
 	_, codeFilePath := sandbox.saveFile(code)
-	// 4. 文件清理（暂时不清理了，留存）
-	// defer clearFile(codeFilename)
+	// 4. 文件清理
+	defer clearFile(codeFilePath)
 	// 2. 编译代码并执行代码
 	language := executeCodeRequest.Language
 	inputList := executeCodeRequest.InputList
