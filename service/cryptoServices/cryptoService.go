@@ -1,8 +1,12 @@
 package cryptoServices
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -10,6 +14,9 @@ import (
 )
 
 const RSA_LEN int = 2048
+const AES_LEN int = 32
+
+var KEY_DATA_SEPARATOR [3]byte = [3]byte{0x00, 0x00, 0x00}
 
 type CryptoService struct {
 }
@@ -47,7 +54,7 @@ func (service *CryptoService) GenerateRSAKeyPairBase64() (string, string, error)
 	return publicKeyBase64, privateKeyBase64, nil
 }
 
-// 使用公钥Base64字符串加密数据
+// 使用公钥Base64字符串加密数据（采用混合加密的方式，即结合AES对称加密，否则直接采用 RSA 会收到加密数据长度的限制，虽然也可以使用分组加密的方式）
 func (service *CryptoService) EncryptWithPublicKeyBase64(publicKeyBase64, originData string) (string, error) {
 	// 先解码为字节数组
 	publicKeyPEM, err := base64.StdEncoding.DecodeString(publicKeyBase64)
@@ -71,18 +78,45 @@ func (service *CryptoService) EncryptWithPublicKeyBase64(publicKeyBase64, origin
 		return "", fmt.Errorf("not an RSA public key")
 	}
 
-	// 加密成字节数组
-	encryptedData, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, []byte(originData))
-	if err != nil {
-		return "", fmt.Errorf("error encrypting data: %v", err)
+	// 生成一个随机的对称密钥
+	symmetricKey := make([]byte, AES_LEN)
+
+	if _, err = rand.Read(symmetricKey); err != nil {
+		return "", err
 	}
 
-	encryptedBase64 := base64.StdEncoding.EncodeToString(encryptedData)
+	// 使用对称密钥和AES-GCM模式加密数据
+	aesBlock, err := aes.NewCipher(symmetricKey)
+	if err != nil {
+		return "", err
+	}
+	gcm, err := cipher.NewGCM(aesBlock)
+	if err != nil {
+		return "", err
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := rand.Read(nonce); err != nil {
+		return "", err
+	}
+	encryptedData := gcm.Seal(nonce, nonce, []byte(originData), nil)
+
+	// 使用RSA公钥加密对称密钥
+	encryptedSymmetricKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, rsaPublicKey, symmetricKey, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// 将加密后的对称密钥和加密后的数据组合(分隔符之前是加密密钥，分隔符后是加密数据)
+	separator := KEY_DATA_SEPARATOR[:]
+	dataBytes := append(append(encryptedSymmetricKey, separator...), encryptedData...)
+	// 字节转 base64
+	encryptedBase64 := base64.StdEncoding.EncodeToString(dataBytes)
 	return encryptedBase64, nil
 }
 
 // 使用私钥Base64字符串解密数据
 func (service *CryptoService) DecryptWithPrivateKeyBase64(privateKeyBase64, encryptedBase64 string) (string, error) {
+	// 密钥先转为字节切片
 	privateKeyPEM, err := base64.StdEncoding.DecodeString(privateKeyBase64)
 	if err != nil {
 		return "", fmt.Errorf("error decoding private key: %v", err)
@@ -98,16 +132,42 @@ func (service *CryptoService) DecryptWithPrivateKeyBase64(privateKeyBase64, encr
 		return "", fmt.Errorf("error parsing private key: %v", err)
 	}
 
-	// 将原先加密的base64数据转为加密的字节数组
-	encryptedData, err := base64.StdEncoding.DecodeString(encryptedBase64)
+	//加密数据接着转为字节切片
+	decodeString, err := base64.StdEncoding.DecodeString(encryptedBase64)
 	if err != nil {
-		return "", fmt.Errorf("error decoding encrypted data: %v", err)
+		return "", fmt.Errorf("error DecodeString privateKeyBase64: %v", err)
 	}
-	// 解密成字节数组
-	decryptedData, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, encryptedData)
+	// 分离出 AES 和 加密数据
+	separator := KEY_DATA_SEPARATOR[:]
+	separatorIndex := bytes.Index(decodeString, separator)
+	if separatorIndex == -1 {
+		return "", fmt.Errorf("separator not found")
+	}
+	// 分离加密后的对称密钥和加密后的数据
+	encryptedSymmetricKey := decodeString[:separatorIndex]
+	encryptedData := decodeString[separatorIndex+len(separator):]
+
+	// 将AES key解密成字节数组
+	symmetricKeyBytes, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, encryptedSymmetricKey, nil)
 	if err != nil {
-		return "", fmt.Errorf("error decrypting data: %v", err)
+		return "", err
 	}
+	// 使用解密后的对称密钥和AES-GCM模式解密数据
+	aesBlock, aesErr := aes.NewCipher(symmetricKeyBytes)
+	if aesErr != nil {
+		return "", aesErr
+	}
+	gcm, err := cipher.NewGCM(aesBlock)
+	if err != nil {
+		return "", err
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := encryptedData[:nonceSize], encryptedData[nonceSize:]
+	open, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+
 	// 字节转为字符串
-	return string(decryptedData), nil
+	return string(open), nil
 }

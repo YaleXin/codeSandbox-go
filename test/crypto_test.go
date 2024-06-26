@@ -10,7 +10,7 @@ import (
 
 func TestEncryptoAndDecrypto(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
-	origidata := "hello codesandbox"
+	origidata := "hello codesandbox long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long"
 
 	var cryptoService cryptoServices.CryptoServiceInterface = new(cryptoServices.CryptoService)
 	publicKeyBase64, privateKeyBase64, err := cryptoService.GenerateRSAKeyPairBase64()
