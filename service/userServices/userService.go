@@ -10,6 +10,7 @@ import (
 	"codeSandbox/utils/tool"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"time"
 )
 
 var userDao db.UserDao
@@ -24,6 +25,36 @@ var UserServiceInstance UserService
 func verifyPwd(submitUser, databaseUser *model.User) bool {
 	return encryptPwdWithSalt(submitUser.Password, databaseUser.Salt) == databaseUser.Password
 }
+
+// 检查该用户本地是否可以执行代码（是否还有额度）并增加相应调用次数
+func (userService *UserService) CheckAndUpdateUserUsage(userId uint) int {
+	user := model.User{
+		Username: "aa",
+		Model: gorm.Model{
+			ID: userId,
+		},
+	}
+	_, err := userDao.GetUserById(&user, userId)
+	if err != nil {
+		return global.NOT_FOUND_USER_ERROR
+	}
+	// TODO 把过期时间去掉
+	createdAt := user.CreatedAt
+	now := time.Now()
+	if now.Sub(createdAt).Hours() > 24*global.USER_VALIDITY_PERIOD {
+		return global.INSUFF_AMOUNT_ERROR
+	}
+
+	// 判断额度
+	if user.CurrentUsage >= user.MonthLimit {
+		return global.INSUFF_AMOUNT_ERROR
+	}
+	// 使用次数加一
+	user.CurrentUsage += 1
+	userDao.UpdateUserById(&user)
+	return global.SUCCESS
+}
+
 func (userService *UserService) UserList() (int, []model.User) {
 	user, err := userDao.ListUser()
 	if err != nil {

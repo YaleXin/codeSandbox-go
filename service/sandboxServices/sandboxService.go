@@ -53,12 +53,12 @@ func (sandboxService *SandboxService) ProgramExecuteCode(c *gin.Context, program
 		return global.PARAMS_ERROR, nil
 	}
 	// 4.
-	executeCode := sandboxService.ExecuteCode(c, executeCodeRequest, keyPair)
-	return global.SUCCESS, &executeCode
+	code, executeCode := sandboxService.ExecuteCode(c, executeCodeRequest, keyPair)
+	return code, &executeCode
 }
 
 // 要么是用户提供 accesskey 的方式调用， 要么是用户登录后调用
-func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeRequest dto.ExecuteCodeRequest, keyPair *model.KeyPair) dto.ExecuteCodeResponse {
+func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeRequest dto.ExecuteCodeRequest, keyPair *model.KeyPair) (int, dto.ExecuteCodeResponse) {
 	// 找出该语言对应的 dockerinfo 对象
 	language := executeCodeRequest.Language
 	byLanguage := getDockerInfoByLanguage(language)
@@ -67,7 +67,10 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	}
 	// 先添加一条执行记录到数据库中
 	var execution model.Execution
-	addExecutionRecord(c, &executeCodeRequest, &execution, keyPair)
+	code := addExecutionRecord(c, &executeCodeRequest, &execution, keyPair)
+	if code != global.SUCCESS {
+		return code, dto.ExecuteCodeResponse{}
+	}
 	// 获取每个执行用例的输出
 	executeMessages := box.ExecuteCode(&executeCodeRequest)
 	// 更新数据库中的执行记录
@@ -78,7 +81,7 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	for _, executeMessage := range executeMessages {
 		executeCodeResponse.ExecuteMessages = append(executeCodeResponse.ExecuteMessages, executeMessage.ToVO())
 	}
-	return executeCodeResponse
+	return global.SUCCESS, executeCodeResponse
 }
 
 func updateExecutionRecord(execution *model.Execution, messages []dto.ExecuteMessage) int {
@@ -131,6 +134,11 @@ func addExecutionRecord(c *gin.Context, executeCodeRequest *dto.ExecuteCodeReque
 	execution.Code = executeCodeRequest.Code
 	inputListJsonBytes, _ := json.Marshal(executeCodeRequest.InputList)
 	execution.InputList = string(inputListJsonBytes)
+	// 判断有没有额度调用
+	code := userServices.UserServiceInstance.CheckAndUpdateUserUsage(execution.UserId)
+	if code != global.SUCCESS {
+		return code
+	}
 	instance := &executionServices.ExecutionServiceInstance
 	addExecutionStatus := instance.AddExecution(execution)
 	return addExecutionStatus
