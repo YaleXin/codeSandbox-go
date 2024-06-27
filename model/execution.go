@@ -4,8 +4,10 @@ import "gorm.io/gorm"
 
 type Execution struct {
 	gorm.Model
-	Code     string `gorm:"type:longtext;null;comment:代码" json:"code"`
-	Language string `gorm:"type:varchar(20);null;comment:语言" json:"language"`
+	Code          string `gorm:"type:longtext;null;comment:代码" json:"code"`
+	Language      string `gorm:"type:varchar(20);null;comment:语言" json:"language"`
+	MaxMemoryCost uint64 `gorm:"type:bigint;null;comment:单个输入用例的最大内存消耗" json:"maxMemoryCost"`
+	MaxTimeCost   int64  `gorm:"type:bigint;null;comment:单个输入用例的最大时间消耗" json:"maxTimeCost"`
 	// 注意，该值需要转为 []sting 后才能使用，OutputList 同理
 	InputList  string `gorm:"type:longtext;null;comment:输入用例" json:"inputList"`
 	OutputList string `gorm:"type:longtext;null;comment:输出用例" json:"outputList"`

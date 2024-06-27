@@ -24,7 +24,7 @@ func ExecuteCode(c *gin.Context) {
 	var exeRequest dto.ExecuteCodeRequest
 	if c.ShouldBind(&exeRequest) == nil && exeRequest.Code != "" && exeRequest.Language != "" {
 		sandboxService := service.SandboxService{}
-		executeCode := sandboxService.ExecuteCode(exeRequest)
+		executeCode := sandboxService.ExecuteCode(c, exeRequest, nil)
 		c.JSON(http.StatusOK, baseRes.OK.WithData(executeCode))
 	} else {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
@@ -35,7 +35,7 @@ func ProgramExecuteCode(c *gin.Context) {
 	var programExecuteCodeRequest dto.ProgramExecuteCodeRequest
 	if c.ShouldBind(&programExecuteCodeRequest) == nil && programExecuteCodeRequest.PublicKey != "" && programExecuteCodeRequest.PublicKey != "" {
 		sandboxService := service.SandboxService{}
-		code, executeCode := sandboxService.ProgramExecuteCode(&programExecuteCodeRequest)
+		code, executeCode := sandboxService.ProgramExecuteCode(c, &programExecuteCodeRequest)
 		if code != global.SUCCESS {
 			c.JSON(http.StatusOK, baseRes.Err.WithData(global.GetErrMsg(code)))
 			return

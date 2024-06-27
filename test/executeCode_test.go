@@ -136,7 +136,7 @@ func TestProgramExecuteCode(t *testing.T) {
 		return
 	}
 	code := string(data)
-	inputList := []string{"1 99999\n"}
+	inputList := []string{"1 11\n", "2 3\n", "2 8 \n"}
 	codeRequest := dto.ExecuteCodeRequest{
 		Code:      code,
 		Language:  "Go",

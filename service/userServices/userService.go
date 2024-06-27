@@ -31,7 +31,7 @@ func (userService *UserService) UserList() (int, []model.User) {
 	}
 	return global.SUCCESS, user
 }
-func getLoginUser(c *gin.Context) (int, *model.User) {
+func (userService *UserService) GetLoginUser(c *gin.Context) (int, *model.User) {
 	get, exists := c.Get("user")
 	if !exists {
 		return global.NOT_LOGIN_ERROR, nil
@@ -52,7 +52,7 @@ func getLoginUser(c *gin.Context) (int, *model.User) {
 }
 func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO) {
 	// 获取当前登录用户
-	code, loginUser := getLoginUser(c)
+	code, loginUser := userService.GetLoginUser(c)
 	if code != global.SUCCESS {
 		return code, nil
 	}
@@ -134,7 +134,7 @@ func (userService *UserService) UserRegister(user *model.User) int {
 }
 func (userService *UserService) GenerateKeyPair(c *gin.Context) (int, *vo.KeyPairVO) {
 	// 获取当前登录用户
-	code, loginUser := getLoginUser(c)
+	code, loginUser := userService.GetLoginUser(c)
 	if code != global.SUCCESS {
 		return code, nil
 	}

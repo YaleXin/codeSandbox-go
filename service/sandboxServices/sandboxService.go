@@ -1,14 +1,18 @@
 package sandboxServices
 
 import (
+	"codeSandbox/model"
 	dto "codeSandbox/model/dto"
 	"codeSandbox/model/vo"
 	"codeSandbox/service/cryptoServices"
+	"codeSandbox/service/executionServices"
 	"codeSandbox/service/keypairService"
 	"codeSandbox/service/sandboxDockerServices"
+	"codeSandbox/service/userServices"
 	"codeSandbox/utils"
 	"codeSandbox/utils/global"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 )
 
 type SandboxService struct{}
@@ -22,11 +26,11 @@ func (sandboxService *SandboxService) GetSupportLanguages() []string {
 	return languages
 }
 
-func (sandboxService *SandboxService) ProgramExecuteCode(programExecuteCodeRequest *dto.ProgramExecuteCodeRequest) (int, *dto.ExecuteCodeResponse) {
+func (sandboxService *SandboxService) ProgramExecuteCode(c *gin.Context, programExecuteCodeRequest *dto.ProgramExecuteCodeRequest) (int, *dto.ExecuteCodeResponse) {
 	// 1. 根据公钥，找出私钥
 	// 2. 使用私钥解密出 json 字符串
 	// 3. 字符串还原成 dto.ExecuteCodeRequest
-	// 4. 调用 ExecuteCode()
+	// 4. 调用 sandboxDockerServices.ExecuteCode()
 
 	// 1.
 	keypairServiceInstance := &keypairService.KeyPairServiceInstance
@@ -43,26 +47,31 @@ func (sandboxService *SandboxService) ProgramExecuteCode(programExecuteCodeReque
 		return global.KEY_PAIR_ERROR, nil
 	}
 	// 3.
-
 	var executeCodeRequest dto.ExecuteCodeRequest
 	err = json.Unmarshal([]byte(decryptWithPrivateKeyBase64), &executeCodeRequest)
 	if err != nil {
 		return global.PARAMS_ERROR, nil
 	}
-	executeCode := sandboxService.ExecuteCode(executeCodeRequest)
+	// 4.
+	executeCode := sandboxService.ExecuteCode(c, executeCodeRequest, keyPair)
 	return global.SUCCESS, &executeCode
 }
 
-func (sandboxService *SandboxService) ExecuteCode(executeCodeRequest dto.ExecuteCodeRequest) dto.ExecuteCodeResponse {
+// 要么是用户提供 accesskey 的方式调用， 要么是用户登录后调用
+func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeRequest dto.ExecuteCodeRequest, keyPair *model.KeyPair) dto.ExecuteCodeResponse {
 	// 找出该语言对应的 dockerinfo 对象
 	language := executeCodeRequest.Language
 	byLanguage := getDockerInfoByLanguage(language)
 	box := sandboxDockerServices.SandBox{
 		DockerInfo: byLanguage,
 	}
-
+	// 先添加一条执行记录到数据库中
+	var execution model.Execution
+	addExecutionRecord(c, &executeCodeRequest, &execution, keyPair)
 	// 获取每个执行用例的输出
 	executeMessages := box.ExecuteCode(&executeCodeRequest)
+	// 更新数据库中的执行记录
+	updateExecutionRecord(&execution, executeMessages)
 	// 对执行用例脱敏
 	executeCodeResponse := dto.ExecuteCodeResponse{}
 	executeCodeResponse.ExecuteMessages = make([]vo.ExecuteMessageVO, 0, 0)
@@ -70,6 +79,62 @@ func (sandboxService *SandboxService) ExecuteCode(executeCodeRequest dto.Execute
 		executeCodeResponse.ExecuteMessages = append(executeCodeResponse.ExecuteMessages, executeMessage.ToVO())
 	}
 	return executeCodeResponse
+}
+
+func updateExecutionRecord(execution *model.Execution, messages []dto.ExecuteMessage) int {
+	// 只有所有的输出用例都是正常，该执行记录状态才为正常
+	isNormalExit := true
+	maxMemoryCost := uint64(0)
+	maxTimeCost := int64(0)
+	outputList := make([]string, 0, len(messages))
+	for _, msg := range messages {
+		if msg.ExitCode != utils.EXIT_CODE_OK {
+			isNormalExit = false
+			outputList = append(outputList, msg.ErrorMessage)
+		} else {
+			outputList = append(outputList, msg.Message)
+		}
+		maxTimeCost = max(maxTimeCost, msg.TimeCost)
+		maxMemoryCost = max(maxMemoryCost, msg.MemoryCost)
+	}
+	// 将输出转为 json 字符串
+	outputListBytes, _ := json.Marshal(outputList)
+	execution.OutputList = string(outputListBytes)
+	if isNormalExit {
+		execution.Status = global.EXECUTION_STATUS_NOMAL_EXIT
+	} else {
+		execution.Status = global.EXECUTION_STATUS_ERROR_EXIT
+	}
+	execution.MaxTimeCost = maxTimeCost
+	execution.MaxMemoryCost = maxMemoryCost
+
+	instance := &executionServices.ExecutionServiceInstance
+	updateExecutionStatus := instance.UpdateExecution(execution)
+	return updateExecutionStatus
+}
+
+func addExecutionRecord(c *gin.Context, executeCodeRequest *dto.ExecuteCodeRequest, execution *model.Execution, keyPair *model.KeyPair) int {
+	// 如果不是程序方式调用，则说明是登录后在前端调用
+	if keyPair == nil {
+		_, user := userServices.UserServiceInstance.GetLoginUser(c)
+		execution.User = *user
+		execution.UserId = user.ID
+	} else {
+		// 反之如果是程序方式调用，其会提供 accessKey，前面的逻辑会查出对应的用户
+		user := keyPair.User
+		execution.User = user
+		execution.UserId = keyPair.UserId
+		execution.KeyPairId = keyPair.ID
+	}
+	execution.Status = global.EXECUTION_STATUS_RUNNING
+	execution.Language = executeCodeRequest.Language
+	execution.Code = executeCodeRequest.Code
+	inputListJsonBytes, _ := json.Marshal(executeCodeRequest.InputList)
+	execution.InputList = string(inputListJsonBytes)
+	instance := &executionServices.ExecutionServiceInstance
+	addExecutionStatus := instance.AddExecution(execution)
+	return addExecutionStatus
+
 }
 
 func getDockerInfoByLanguage(codeLanguage string) utils.DockerInfo {
