@@ -5,6 +5,7 @@ import (
 	utilsType "codeSandbox/utils"
 	filesUtils "codeSandbox/utils/files"
 	"context"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -46,7 +47,7 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
 	tarFilePath := "main.tar"
 	destFilePath := WORDING_DIR + string(filepath.Separator) + uuid
 
-	message := runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "", "mkdir")
+	message := runCmdByContainer(containerId, []string{"mkdir", "-p", uuid}, "", "", "mkdir", "")
 	if message.ExitCode != utilsType.EXIT_CODE_OK {
 		return false
 	}
@@ -66,6 +67,24 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
 		log.Errorf("copy to containerId:%v fail:%v", containerId, err)
 		return false
 	}
+
+	// 规定该新目录只能给该用户读写（root除外）
+	newUserName := strings.Replace(uuid, "-", "", -1)
+	message = runCmdByContainer(containerId, []string{"useradd", newUserName, "-m"}, "", "", "useradd", "")
+	if message.ExitCode != utilsType.EXIT_CODE_OK {
+		return false
+	}
+	// 更改新建的目录归属权为新建的用户
+	cmds := []string{"chown", "-R", fmt.Sprintf("%v:%v", newUserName, newUserName), uuid}
+	message = runCmdByContainer(containerId, cmds, "", "", "chown", "")
+	if message.ExitCode != utilsType.EXIT_CODE_OK {
+		return false
+	}
+	cmds = []string{"chmod", "-R", "700", uuid}
+	message = runCmdByContainer(containerId, cmds, "", "", "chmod", "")
+	if message.ExitCode != utilsType.EXIT_CODE_OK {
+		return false
+	}
 	return true
 }
 
@@ -83,6 +102,7 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	//======== 复制文件（先打包文件，再复制到容器中）
 	// 对于 temp\Go\81b6f397-a185-4ef2-b3c4-908c3ad4d20c\Main.go uuid = 81b6f397-a185-4ef2-b3c4-908c3ad4d20c
 	uuid := filepath.Base(filepath.Dir(userCodeFilePath))
+	newUserName := strings.Replace(uuid, "-", "", -1)
 	copyStatus := copyFileToContainer(containerId, userCodeFilePath, uuid)
 	if !copyStatus {
 		return []dto.ExecuteMessage{{
@@ -90,13 +110,15 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 			ErrorMessage: "System error",
 		}}
 	}
+	// 对容器中刚刚创建的目录和用户执行删除操作
+	defer clearContainerFileAndUser(containerId, uuid)
 
 	//====== 编译文件
 	compileCmd := dockerInfo.CompileCmd
 	cmdSplit := strings.Split(compileCmd, " ")
 	// Linux系统下，路径分隔符必然为 /
 	workDir := WORDING_DIR + "/" + uuid
-	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "", "compile")
+	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "", "compile", newUserName)
 	log.Infof("compileRes:%v", compileRes)
 	if compileRes.ExitCode != utilsType.EXIT_CODE_OK {
 		compileRes.ExitCode = utilsType.EXIT_CODE_COMPILE_ERROR
@@ -105,17 +127,33 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	}
 
 	//====== 运行代码
-	messages := runCode(containerId, dockerInfo, inputList, workDir)
+	messages := runCode(containerId, dockerInfo, inputList, workDir, newUserName)
 
 	return messages
 }
 
-func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []string, workDir string) []dto.ExecuteMessage {
+func clearContainerFileAndUser(containerId string, uuid string) {
+	// 删除用户和对应的家目录
+	newUserName := strings.Replace(uuid, "-", "", -1)
+	cmds := []string{"userdel", "-r", newUserName}
+	message := runCmdByContainer(containerId, cmds, "", "", "userdel", "")
+	if message.ExitCode != utilsType.EXIT_CODE_OK {
+		log.Errorf("userdel %v fail", newUserName)
+	}
+	// 删除新建的用于存放代码的目录
+	cmds = []string{"rm", "-rf", uuid}
+	message = runCmdByContainer(containerId, cmds, "", "", "rm -rf uuid", "")
+	if message.ExitCode != utilsType.EXIT_CODE_OK {
+		log.Errorf("rm -rf %v fail", uuid)
+	}
+}
+
+func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []string, workDir string, user string) []dto.ExecuteMessage {
 	messages := make([]dto.ExecuteMessage, 0, 0)
 	runCmd := dockerInfo.RunCmd
 	runSplit := strings.Split(runCmd, " ")
 	for _, inputStr := range inputList {
-		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr, "run")
+		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr, "run", user)
 		messages = append(messages, runRes)
 	}
 	return messages

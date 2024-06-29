@@ -128,7 +128,7 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 }
 
 // 当 workDir 为空字符串，即 ""，则不设置 WorkingDir
-func runCmdByContainer(containerId string, cmd []string, workDir string, input string, tag string) dto.ExecuteMessage {
+func runCmdByContainer(containerId string, cmd []string, workDir string, input string, tag string, user string) dto.ExecuteMessage {
 	// 为了①拿到容器运行该命令所消耗的内存，②同时执行命令并获取容器的标准输出
 	// 需要开启两个协程，分别完成以上功能
 	// 为了得到更精确的监控信息先开启监控协程①，①“准备就绪”后再②开始执行命令
@@ -142,6 +142,9 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 		AttachStdin:  true,
 		Tty:          false,
 		Cmd:          cmd,
+	}
+	if user != "" {
+		execConfig.User = user
 	}
 	if workDir != "" {
 		execConfig.WorkingDir = workDir
@@ -204,7 +207,7 @@ Loop:
 
 func createContainer(dockerInfo *utils.DockerInfo, containerName string) string {
 	ctx := context.Background()
-	resp, err := DockerClient.ContainerCreate(ctx, &container.Config{
+	containerConfig := container.Config{
 		Image:           dockerInfo.ImageName,
 		AttachStdin:     true,
 		AttachStdout:    true,
@@ -212,7 +215,8 @@ func createContainer(dockerInfo *utils.DockerInfo, containerName string) string 
 		Tty:             true,
 		NetworkDisabled: true,
 		WorkingDir:      WORDING_DIR,
-	}, nil, nil, nil, containerName)
+	}
+	resp, err := DockerClient.ContainerCreate(ctx, &containerConfig, nil, nil, nil, containerName)
 	var containerId string
 	// 判断容器名字是否被占用，被占用则直接启动
 	if err != nil {

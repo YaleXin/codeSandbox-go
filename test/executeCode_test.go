@@ -76,7 +76,9 @@ func TestExecuteTimeoutCode(t *testing.T) {
 
 // 无睡眠
 func TestExecuteFastCode(t *testing.T) {
-	code := "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\tsum := a + b\n\tsliceNums := make([]int, 0, 0)\n\tfor i := 0; i < sum; i++ {\n\t\tsliceNums = append(sliceNums, i)\n\t}\n\tfmt.Println(sum)\n}\n"
+	//code := "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvar a int\n\tvar b int\n\tscanf, err := fmt.Scanf(\"%d%d\", &a, &b)\n\tif err != nil {\n\t\tfmt.Println(scanf, err)\n\t}\n\tsum := a + b\n\tsliceNums := make([]int, 0, 0)\n\tfor i := 0; i < sum; i++ {\n\t\tsliceNums = append(sliceNums, i)\n\t}\n\tfmt.Println(sum)\n}\n"
+	data, _ := fs.ReadFile(os.DirFS("C:\\Users\\Yalexin\\GolandProjects\\codeSandbox\\inner_test\\demo"), "main.go")
+	code := string(data)
 	inputList := []string{"1 99999\n"}
 	// 在测试开始前设置日志级别
 	logrus.SetLevel(logrus.DebugLevel)
