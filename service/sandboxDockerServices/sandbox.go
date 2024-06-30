@@ -21,7 +21,10 @@ const CODE_LOCAL_DIR_PREX string = "temp"
 const ERR_MSG_TIME_OUT string = "TIMEOUT"
 
 // 每个执行用例执行最大的时间，单位为秒
-const RUN_CODE_TIME_OUT = 5 * time.Second
+const RUN_CODE_TIMEOUT = 5 * time.Second
+
+// 执行代码最大的时间，单位为秒（与上面的有点差别，该变量是指明所有的输入用例花费的时间加和不能超过某个值）
+const TOTAL_CODE_TIMEOUT = 20 * time.Second
 
 // 超时外开销
 const TIMEOUT_OVERHEAD = time.Second * 2
@@ -158,9 +161,15 @@ func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []st
 	messages := make([]dto.ExecuteMessage, 0, 0)
 	runCmd := dockerInfo.RunCmd
 	runSplit := strings.Split(runCmd, " ")
+	// 由于对于每个执行用例都做了“强的”超时控制，这里只对总的执行时间做“弱的”超时控制
+	startT := time.Now()
 	for _, inputStr := range inputList {
 		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr, "run", user)
 		messages = append(messages, runRes)
+		tc := time.Since(startT)
+		if tc.Seconds() > float64(TOTAL_CODE_TIMEOUT)/float64(time.Second) {
+			break
+		}
 	}
 	return messages
 }

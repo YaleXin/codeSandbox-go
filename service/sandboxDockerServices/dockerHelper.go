@@ -140,7 +140,7 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	ctx := context.Background()
 
 	// 创建执行命令实例（所有命令都要加上  timeout 做超时控制，防止用户执行长时间代码）
-	cmd = append([]string{"timeout", fmt.Sprintf("%0.2f", RUN_CODE_TIME_OUT.Seconds())}, cmd...)
+	cmd = append([]string{"timeout", fmt.Sprintf("%0.2f", RUN_CODE_TIMEOUT.Seconds())}, cmd...)
 	execConfig := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
@@ -194,7 +194,7 @@ Loop:
 				exitCode = utils.EXIT_CODE_TIME_OUT
 			}
 			break Loop
-		case <-time.After(RUN_CODE_TIME_OUT + TIMEOUT_OVERHEAD): // 在容器执行命令时使用 timeout RUN_CODE_TIME_OUT 进行超时控制，这里加 TIMEOUT_OVERHEAD 作为运行开销
+		case <-time.After(RUN_CODE_TIMEOUT + TIMEOUT_OVERHEAD): // 在容器执行命令时使用 timeout RUN_CODE_TIMEOUT 进行超时控制，这里加 TIMEOUT_OVERHEAD 作为运行开销
 			// 超时结束
 			message.ExitCode = utils.EXIT_CODE_TIME_OUT
 			message.ErrorMessage = ERR_MSG_TIME_OUT

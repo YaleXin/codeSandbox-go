@@ -26,7 +26,7 @@ func ExecuteCode(c *gin.Context) {
 		sandboxService := service.SandboxService{}
 		code, executeData := sandboxService.ExecuteCode(c, exeRequest, nil)
 		if code != global.SUCCESS {
-			c.JSON(http.StatusOK, baseRes.Err.WithData(executeData))
+			c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
 		} else {
 			c.JSON(http.StatusOK, baseRes.OK.WithData(executeData))
 		}
