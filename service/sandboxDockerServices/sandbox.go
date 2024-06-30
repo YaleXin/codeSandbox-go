@@ -23,6 +23,12 @@ const ERR_MSG_TIME_OUT string = "TIMEOUT"
 // 每个执行用例执行最大的时间，单位为秒
 const RUN_CODE_TIME_OUT = 5 * time.Second
 
+// 超市额外开销
+const TIMEOUT_OVERHEAD = time.Second * 2
+
+// timemout 命令执行指定命令后的返回码
+const TIMEOUT_CMD_EXITCODE = 124
+
 func clearFile(codeFilename string) {
 
 	dir := filepath.Dir(codeFilename)

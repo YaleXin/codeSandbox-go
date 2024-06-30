@@ -98,7 +98,10 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 	}
 	// 获取容器标准输出和标准错误
 	var stdoutBuf, stderrBuf bytes.Buffer
+	log.Debugf("start to copy stdoutBuf and stderrBuf on %v", tag)
+	// 下面的代码将会阻塞直至程序输出
 	_, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, hijackedResp)
+	log.Debugf("finish to copy stdoutBuf and stderrBuf on %v", tag)
 	if err != nil {
 		errMsg := fmt.Sprintf("StdCopy fail:%v", err)
 		log.Panicf(errMsg)
@@ -135,7 +138,9 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	message := dto.ExecuteMessage{}
 	message.ExitCode = utils.EXIT_CODE_BASE_ERROR
 	ctx := context.Background()
-	// 创建执行命令实例
+
+	// 创建执行命令实例（所有命令都要加上  timeout 做超时控制，防止用户执行长时间代码）
+	cmd = append([]string{"timeout", fmt.Sprintf("%0.2f", RUN_CODE_TIME_OUT.Seconds())}, cmd...)
 	execConfig := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
@@ -175,13 +180,21 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 	// 开始时间打点
 	startT := time.Now()
 	go containerRunCmd(resp.ID, input, messagesChannel, tag)
+	var exitCode int8
 Loop:
 	for {
 		select {
 		case message, _ = <-messagesChannel:
 			// 等待命令执行完毕（按时完成）
+			// 检查状态码
+			execInspect, _ := DockerClient.ContainerExecInspect(ctx, resp.ID)
+			exitCode = int8(execInspect.ExitCode)
+			// 虚假的按时完成（即 timeout 命令返回值是 124）
+			if exitCode == TIMEOUT_CMD_EXITCODE {
+				exitCode = utils.EXIT_CODE_TIME_OUT
+			}
 			break Loop
-		case <-time.After(RUN_CODE_TIME_OUT):
+		case <-time.After(RUN_CODE_TIME_OUT + TIMEOUT_OVERHEAD): // 在容器执行命令时使用 timeout RUN_CODE_TIME_OUT 进行超时控制，这里加 TIMEOUT_OVERHEAD 作为运行开销
 			// 超时结束
 			message.ExitCode = utils.EXIT_CODE_TIME_OUT
 			message.ErrorMessage = ERR_MSG_TIME_OUT
@@ -197,11 +210,12 @@ Loop:
 
 	message.TimeCost = tc.Milliseconds()
 	message.MemoryCost = <-memUsageChannel
+	message.ExitCode = exitCode
 	close(memUsageChannel)
 	close(shouldStopMoniChannel)
 	close(moniReadyChannel)
 	close(messagesChannel)
-
+	log.Debugf("final message = %v on %v", message, tag)
 	return message
 }
 
