@@ -35,9 +35,11 @@ func Starter() {
 		gin.SetMode(gin.DebugMode)
 	}
 	r := gin.New()
-
-	// 注册 swagger
-	registerSwagger(r)
+	// 生产环境中必须要关闭 API 文档
+	if utils.Config.Server.AppMode != "prod" {
+		// 注册 swagger
+		registerSwagger(r)
+	}
 
 	// 一些配置
 	r.MaxMultipartMemory = 8 << 20                 // 8 MiB
