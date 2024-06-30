@@ -11,6 +11,7 @@ import (
 	"codeSandbox/service/userServices"
 	"codeSandbox/utils"
 	"codeSandbox/utils/global"
+	"codeSandbox/utils/tool"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 )
@@ -25,9 +26,21 @@ func (sandboxService *SandboxService) GetSupportLanguages() []string {
 	}
 	return languages
 }
+func checkProgramExecuteCodeRequest(programExecuteCodeRequest *dto.ProgramExecuteCodeRequest, privateKeyBase64 string) bool {
+	if tool.IsStructEmpty(programExecuteCodeRequest) {
+		return false
+	}
+	// 判断签名
+	return verifySignature(programExecuteCodeRequest, privateKeyBase64)
+}
 
+// verifySignature 判断签名
+func verifySignature(programExecuteCodeRequest *dto.ProgramExecuteCodeRequest, privateKeyBase64 string) bool {
+	return tool.MD5Str(programExecuteCodeRequest.Payload+privateKeyBase64) == programExecuteCodeRequest.Signature
+}
 func (sandboxService *SandboxService) ProgramExecuteCode(c *gin.Context, programExecuteCodeRequest *dto.ProgramExecuteCodeRequest) (int, *dto.ExecuteCodeResponse) {
 	// 1. 根据公钥，找出私钥
+	// 1.5 判断签名
 	// 2. 使用私钥解密出 json 字符串
 	// 3. 字符串还原成 dto.ExecuteCodeRequest
 	// 4. 调用 sandboxDockerServices.ExecuteCode()
@@ -41,6 +54,10 @@ func (sandboxService *SandboxService) ProgramExecuteCode(c *gin.Context, program
 	cryptoInstance := &cryptoServices.CryptoServiceInstance
 	privateKeyBase64 := keyPair.SecretKey
 	encryptedBase64 := programExecuteCodeRequest.Payload
+	// 1.5
+	if !checkProgramExecuteCodeRequest(programExecuteCodeRequest, privateKeyBase64) {
+		return global.PARAMS_ERROR, nil
+	}
 	// 2.
 	decryptWithPrivateKeyBase64, err := cryptoInstance.DecryptWithPrivateKeyBase64(privateKeyBase64, encryptedBase64)
 	if err != nil {

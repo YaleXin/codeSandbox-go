@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"codeSandbox/model/dto"
 	"codeSandbox/service/cryptoServices"
+	"codeSandbox/service/keypairService"
 	"codeSandbox/service/sandboxDockerServices"
 	"codeSandbox/utils"
+	"codeSandbox/utils/tool"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/assert/v2"
@@ -148,12 +150,26 @@ func TestProgramExecuteCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("json.Marshal %v", err)
 	}
+	// 获取密钥对
 	publicKeyBase64 := "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUE2M0UydVFUVVhFZTYzQXV1bEpPRQpOeFlJU0QvcElpamswWk9QTDRSWUFjMWhBRTlQelR0blBHUWJzMFRNZk1BRWI1WFM0bUNXYlgveHJyQVo1dlc4CnBieEorNXNMTFJjOEY0aXh0QUlOY2pxYTI2Mkh2R2JQOFNCbzFwdW54NWt3Z3M5b0tLN3M4R1h1ejZhT01STXEKSEJaYXhwVGtsdEo5c2NyTTlQUFhVSUFScEVpZHBqNDBiRU0rcE1nTGNQSDA5U1F6VE1WbjZ0RG9Fd05WRDNydwo0WWtJNWxYK2YwZi9WMFNVT3NrbUFvbk1aMGtnUVpuNDIwNWt6SFBvSXpGSEFTbmNhbG1vcGNRVk9NWnp1ZWZlCnh0ZGlrbmtlb1ZpUXZ0TVlsM0N0VXhibEMxUnJGQk1qZ243WVliUStSVjhKb01IOG8zQ2IrdTNCRU1IeXNWdE4KTFFJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+	keypairServiceInstance := &keypairService.KeyPairServiceInstance
+	_, keyPair := keypairServiceInstance.GetKeyPairByPublicKey(publicKeyBase64)
 
 	var cryptoService cryptoServices.CryptoServiceInterface = new(cryptoServices.CryptoService)
-	base64, err := cryptoService.EncryptWithPublicKeyBase64(publicKeyBase64, string(origidata))
+	payload, err := cryptoService.EncryptWithPublicKeyBase64(publicKeyBase64, string(origidata))
+
 	if err != nil {
 		t.Fatalf("EncryptWithPublicKeyBase64 %v", err)
 	}
-	t.Logf("base64:%v", base64)
+	t.Logf("payload:%v", payload)
+
+	signature := tool.MD5Str(payload + keyPair.SecretKey)
+	programExecuteCodeRequest := dto.ProgramExecuteCodeRequest{
+		Payload:   payload,
+		PublicKey: publicKeyBase64,
+		Signature: signature,
+	}
+	jsonBytes, _ := json.Marshal(programExecuteCodeRequest)
+
+	t.Logf(string(jsonBytes))
 }
