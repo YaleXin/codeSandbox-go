@@ -49,13 +49,14 @@ type SandboxMachine struct {
 	Port string `yaml:"Port"`
 }
 type Server struct {
-	AppMode  string   `yaml:"AppMode"`
-	Host     string   `yaml:"Host"`
-	Port     string   `yaml:"Port"`
-	JwtKey   string   `yaml:"JwtKey"`
-	Database Database `yaml:"Database"`
-	Oss      Oss      `yaml:"Oss"`
-	Push     Push     `yaml:"Push,omitempty"`
+	AppMode       string   `yaml:"AppMode"`
+	Host          string   `yaml:"Host"`
+	Port          string   `yaml:"Port"`
+	JwtKey        string   `yaml:"JwtKey"`
+	JwtExpireTime int      `yaml:"JwtExpireTime"`
+	Database      Database `yaml:"Database"`
+	Oss           Oss      `yaml:"Oss"`
+	Push          Push     `yaml:"Push,omitempty"`
 }
 type Database struct {
 	Type     string `yaml:"Type"`

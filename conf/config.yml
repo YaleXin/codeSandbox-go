@@ -4,7 +4,9 @@ Server:
   Host: localhost
   Port: 8080
   # Jwt加密秘钥
-  JwtKey:
+  JwtKey: xxxxx
+  # Jwt 过期时间，单位为 minutes
+  JwtExpireTime: 10
   Database:
     Type: mysql
     Host: localhost

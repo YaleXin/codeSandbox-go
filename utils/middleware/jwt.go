@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-var JwtKey = []byte(utils.Config.Server.JwtKey)
+var JWT_KEY = []byte(utils.Config.Server.JwtKey)
+var JWT_EXPIRE_TIME = time.Duration(utils.Config.Server.JwtExpireTime) * time.Minute
 var code int
 
 // jwt 中要加密的内容
@@ -23,18 +24,18 @@ type MyClaims struct {
 
 // SetToken 生成token
 func SetToken(userId uint, username string, role int) (string, int) {
-	expireTime := time.Now().Add(time.Hour * 24 * 3)
+	expireTime := time.Now().Add(JWT_EXPIRE_TIME)
 	SetClaims := MyClaims{
 		userId,
 		username,
 		role,
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
-			Issuer:    "Qiudie",
+			Issuer:    "codeSandbox",
 		},
 	}
 	reqClaim := jwt.NewWithClaims(jwt.SigningMethodHS256, SetClaims)
-	token, err := reqClaim.SignedString(JwtKey)
+	token, err := reqClaim.SignedString(JWT_KEY)
 	if err != nil {
 		return "", errmsg.ERROR
 	}
@@ -44,7 +45,7 @@ func SetToken(userId uint, username string, role int) (string, int) {
 // CheckToken 验证token
 func CheckToken(token string) (*MyClaims, int) {
 	setToken, err := jwt.ParseWithClaims(token, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return JwtKey, nil
+		return JWT_KEY, nil
 	})
 	if err != nil {
 		return nil, errmsg.ERROR
