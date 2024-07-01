@@ -12,6 +12,16 @@ definitions:
       language:
         type: string
     type: object
+  dto.UserLoginRequest:
+    description: 用户注册请求参数
+    properties:
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名
+        type: string
+    type: object
   dto.UserRegisterRequest:
     description: 用户注册请求参数
     properties:
@@ -92,6 +102,76 @@ paths:
       summary: 获取支持的语言列表
       tags:
       - Languages
+  /api/v1/user/keys:
+    get:
+      consumes:
+      - application/json
+      description: 展示用户的密钥对
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 展示用户的密钥对
+  /api/v1/user/login:
+    post:
+      consumes:
+      - application/json
+      description: 提交用户名和密码
+      parameters:
+      - description: 登录表单
+        in: body
+        name: userLoginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 用户登录
+  /api/v1/user/newKey:
+    post:
+      consumes:
+      - application/json
+      description: 生成密钥对，用于通过程序式提交代码
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 生成密钥对
   /api/v1/user/register:
     post:
       consumes:
