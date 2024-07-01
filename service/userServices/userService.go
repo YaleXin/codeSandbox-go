@@ -103,8 +103,12 @@ func checkLoginUser(user *model.User) bool {
 }
 
 // 返回执行结果，用户id， jwt token
-func (userService *UserService) UserLogin(submitUser *model.User) (int, *vo.UserVO) {
-	if !checkLoginUser(submitUser) {
+func (userService *UserService) UserLogin(submitUserRequest *dto.UserLoginRequest) (int, *vo.UserVO) {
+	submitUser := model.User{
+		Username: submitUserRequest.Username,
+		Password: submitUserRequest.Password,
+	}
+	if !checkLoginUser(&submitUser) {
 		return global.PARAMS_ERROR, nil
 	}
 	// 查询数据库中该用户信息
@@ -115,7 +119,7 @@ func (userService *UserService) UserLogin(submitUser *model.User) (int, *vo.User
 	if err != nil {
 		return global.NOT_FOUND_USER_ERROR, nil
 	}
-	if !verifyPwd(submitUser, &databaseUser) {
+	if !verifyPwd(&submitUser, &databaseUser) {
 		return global.PWD_ERROR, nil
 	}
 	token, tCode := middleware.SetToken(databaseUser.ID, databaseUser.Username, databaseUser.Role)

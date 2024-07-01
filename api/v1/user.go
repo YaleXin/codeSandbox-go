@@ -1,7 +1,6 @@
 package api_v1
 
 import (
-	"codeSandbox/model"
 	"codeSandbox/model/dto"
 	baseRes "codeSandbox/responses"
 	"codeSandbox/service/userServices"
@@ -40,9 +39,18 @@ func Register(c *gin.Context) {
 	}
 }
 
-// Login 登陆
+// Login 登录
+// @Summary 用户登录
+// @Description 提交用户名和密码
+// @Accept json
+// @Produce json
+// @Param userLoginRequest body dto.UserLoginRequest true "登录表单"
+// @Success 200 {object} responses.Response "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/login [post]
 func Login(c *gin.Context) {
-	var data model.User
+	var data dto.UserLoginRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
