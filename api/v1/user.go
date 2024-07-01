@@ -70,6 +70,15 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, baseRes.OK.WithData(userVO))
 }
 
+// NewKey 生成密钥对
+// @Summary 生成密钥对
+// @Description 生成密钥对，用于通过程序式提交代码
+// @Accept json
+// @Produce json
+// @Success 200 {object} responses.Response "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/newKey [post]
 func NewKey(c *gin.Context) {
 	instance := &userServices.UserServiceInstance
 	code, vo := instance.GenerateKeyPair(c)
@@ -85,6 +94,15 @@ func NewKey(c *gin.Context) {
 	}
 }
 
+// KeyList 展示用户的密钥对
+// @Summary 展示用户的密钥对
+// @Description 展示用户的密钥对
+// @Accept json
+// @Produce json
+// @Success 200 {object} responses.Response "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/keys [get]
 func KeyList(c *gin.Context) {
 	instance := &userServices.UserServiceInstance
 	code, pairs := instance.GetUserKeys(c)
