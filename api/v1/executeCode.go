@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-// ExecuteCodeHandler 处理执行代码的请求
+// ExecuteCode 处理执行代码的请求
 // @Summary 执行代码
 // @Description 根据用户提交的代码和语言执行代码并返回结果
 // @Tags Code Execution

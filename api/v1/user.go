@@ -2,6 +2,7 @@ package api_v1
 
 import (
 	"codeSandbox/model"
+	"codeSandbox/model/dto"
 	baseRes "codeSandbox/responses"
 	"codeSandbox/service/userServices"
 	"codeSandbox/utils/global"
@@ -10,8 +11,17 @@ import (
 )
 
 // Register 注册
+// @Summary 用户注册
+// @Description 提交用户名，邮箱和密码
+// @Accept json
+// @Produce json
+// @Param userRegisterRequest body dto.UserRegisterRequest true "用户信息"
+// @Success 200 {object} responses.Response "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/register [post]
 func Register(c *gin.Context) {
-	var data model.User
+	var data dto.UserRegisterRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
 		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))

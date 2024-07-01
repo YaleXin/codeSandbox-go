@@ -3,6 +3,7 @@ package userServices
 import (
 	"codeSandbox/db"
 	"codeSandbox/model"
+	"codeSandbox/model/dto"
 	"codeSandbox/model/vo"
 	"codeSandbox/service/keypairService"
 	"codeSandbox/utils/global"
@@ -10,6 +11,7 @@ import (
 	"codeSandbox/utils/tool"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"regexp"
 	"time"
 )
 
@@ -42,7 +44,7 @@ func (userService *UserService) CheckAndUpdateUserUsage(userId uint) int {
 	createdAt := user.CreatedAt
 	now := time.Now()
 	if now.Sub(createdAt).Hours() > 24*global.USER_VALIDITY_PERIOD {
-		return global.INSUFF_AMOUNT_ERROR
+		return global.USER_TRY_TIME_EXPIRE
 	}
 
 	// 判断额度
@@ -96,9 +98,13 @@ func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO
 	return global.SUCCESS, keyPairVOs
 }
 
+func checkLoginUser(user *model.User) bool {
+	return user != nil && !tool.IsBlankString(user.Username) && !tool.IsBlankString(user.Password)
+}
+
 // 返回执行结果，用户id， jwt token
 func (userService *UserService) UserLogin(submitUser *model.User) (int, *vo.UserVO) {
-	if !checkUser(submitUser) {
+	if !checkLoginUser(submitUser) {
 		return global.PARAMS_ERROR, nil
 	}
 	// 查询数据库中该用户信息
@@ -133,18 +139,41 @@ func (userService *UserService) UserLogout(user model.User) bool {
 	return false
 }
 
-func checkUser(user *model.User) bool {
-	return user != nil && !tool.IsBlankString(user.Username) && !tool.IsBlankString(user.Password)
+func checkRegisterUser(user *model.User) bool {
+	return !tool.IsStructEmpty(user) && isValidPasswd(user.Password) && isValidEmail(user.Email)
+}
+
+func isValidPasswd(password string) bool {
+	// 正则表达式，分别匹配小写字母、大写字母和数字
+	pattern := `(?=.*[a-z])(?=.*[A-Z])(?=.*\d)`
+	matched, _ := regexp.MatchString(pattern, password)
+	return matched && len(password) >= 8 && len(password) <= 16
+}
+
+func isValidEmail(email string) bool {
+	//开始是一个或多个字母、数字、点号、百分号、加号、减号或下划线。
+	//然后是一个 "@" 符号。
+	//接着是一个或多个字母、数字、点号或减号。
+	//最后是一个点号，后面跟着两个或更多的字母（代表顶级域名）。
+	pattern := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
+	r := regexp.MustCompile(pattern)
+	// 使用正则表达式的 MatchString 方法进行匹配
+	return r.MatchString(email)
 }
 func encryptPwdWithSalt(pwd string, salt string) string {
 	return tool.MD5Str(pwd + salt)
 }
 
-func (userService *UserService) UserRegister(user *model.User) int {
-	if !checkUser(user) {
+func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegisterRequest) int {
+	user := model.User{
+		Username: userRegisterRequest.Username,
+		Password: userRegisterRequest.Password,
+		Email:    userRegisterRequest.Email,
+	}
+	if !checkRegisterUser(&user) {
 		return global.PARAMS_ERROR
 	}
-	_, err := userDao.GetUserByName(user)
+	_, err := userDao.GetUserByName(&user)
 	// 查不到时候会报 error
 	if err == nil {
 		return global.DATA_REPEAT_ERROR
@@ -157,7 +186,7 @@ func (userService *UserService) UserRegister(user *model.User) int {
 	user.Password = md5Str
 	user.Salt = salt
 	user.Role = global.NORMAL_USER_ROLE
-	_, err = userDao.UserAdd(user)
+	_, err = userDao.UserAdd(&user)
 	if err != nil {
 		return global.SYSTEM_ERROR
 	}

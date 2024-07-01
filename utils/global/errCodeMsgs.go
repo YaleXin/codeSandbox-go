@@ -12,6 +12,7 @@ const (
 	NOT_FOUND_USER_ERROR = 40401
 	PWD_ERROR            = 40402
 	INSUFF_AMOUNT_ERROR  = 40403
+	USER_TRY_TIME_EXPIRE = 40404
 	FORBIDDEN_ERROR      = 40300
 	SYSTEM_ERROR         = 50000
 	OPERATION_ERROR      = 50001
@@ -31,6 +32,7 @@ var codemsg = map[int]string{
 	NOT_FOUND_USER_ERROR: "用户不存在",
 	PWD_ERROR:            "密码错误",
 	INSUFF_AMOUNT_ERROR:  "调用额度不足",
+	USER_TRY_TIME_EXPIRE: "体验时间已过",
 	FORBIDDEN_ERROR:      "禁止访问",
 	SYSTEM_ERROR:         "系统内部异常",
 	OPERATION_ERROR:      "操作失败",

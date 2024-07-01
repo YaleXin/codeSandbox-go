@@ -11,7 +11,7 @@ func SandboxGroup(r *gin.Engine) {
 
 	router := r.Group("api/v1/")
 	{
-		router.GET("languages", v1.List)
+		router.GET("languages", v1.LanguageList)
 
 	}
 	// 常规方式执行（登录后即可提交代码）
