@@ -43,7 +43,34 @@ const docTemplate = `{
                     "200": {
                         "description": "成功响应",
                         "schema": {
-                            "$ref": "#/definitions/responses.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/dto.ExecuteCodeResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "executeMessages": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/vo.ExecuteMessageVO"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -78,7 +105,22 @@ const docTemplate = `{
                     "200": {
                         "description": "成功响应",
                         "schema": {
-                            "$ref": "#/definitions/responses.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -267,6 +309,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ExecuteCodeResponse": {
+            "type": "object",
+            "properties": {
+                "executeMessages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/vo.ExecuteMessageVO"
+                    }
+                }
+            }
+        },
         "dto.UserLoginRequest": {
             "description": "用户注册请求参数",
             "type": "object",
@@ -312,6 +365,27 @@ const docTemplate = `{
                 "msg": {
                     "description": "错误描述",
                     "type": "string"
+                }
+            }
+        },
+        "vo.ExecuteMessageVO": {
+            "type": "object",
+            "properties": {
+                "errorMessage": {
+                    "description": "脱敏信息，将 docker 容器的错误信息做进一步处理",
+                    "type": "string"
+                },
+                "exitCode": {
+                    "type": "integer"
+                },
+                "memoryCost": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "timeCost": {
+                    "type": "integer"
                 }
             }
         }

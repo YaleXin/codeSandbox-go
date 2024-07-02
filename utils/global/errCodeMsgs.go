@@ -8,6 +8,8 @@ const (
 	NO_AUTH_ERROR        = 40101
 	LACK_AUTH_ERROR      = 40102
 	BAN_ERROR            = 40103
+	TOKEN_WRONG_ERROR    = 40104
+	TOKEN_RUNTIME_ERROR  = 40105
 	NOT_FOUND_ERROR      = 40400
 	NOT_FOUND_USER_ERROR = 40401
 	PWD_ERROR            = 40402
@@ -25,6 +27,8 @@ var codemsg = map[int]string{
 	PARAMS_ERROR:         "请求参数错误",
 	DATA_REPEAT_ERROR:    "数据重复",
 	NOT_LOGIN_ERROR:      "未登录",
+	TOKEN_WRONG_ERROR:    "Token错误",
+	TOKEN_RUNTIME_ERROR:  "Token过期",
 	NO_AUTH_ERROR:        "无权限",
 	LACK_AUTH_ERROR:      "权限不足",
 	BAN_ERROR:            "已经禁用该用户",

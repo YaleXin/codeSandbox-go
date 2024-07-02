@@ -14,7 +14,7 @@ import (
 // @Tags Languages
 // @Accept json
 // @Produce json
-// @Success 200 {object} responses.Response "成功响应"
+// @Success 200 {object} baseRes.Response{data=[]string} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/languages [get]

@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	baseRes "codeSandbox/responses"
 	"codeSandbox/utils"
-	"codeSandbox/utils/errmsg"
 	"codeSandbox/utils/global"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -37,7 +37,7 @@ func SetToken(userId uint, username string, role int) (string, int) {
 	reqClaim := jwt.NewWithClaims(jwt.SigningMethodHS256, SetClaims)
 	token, err := reqClaim.SignedString(JWT_KEY)
 	if err != nil {
-		return "", errmsg.ERROR
+		return "", global.SYSTEM_ERROR
 	}
 	return token, global.SUCCESS
 }
@@ -48,12 +48,12 @@ func CheckToken(token string) (*MyClaims, int) {
 		return JWT_KEY, nil
 	})
 	if err != nil {
-		return nil, errmsg.ERROR
+		return nil, global.SYSTEM_ERROR
 	}
 	if key, ok := setToken.Claims.(*MyClaims); ok && setToken.Valid {
-		return key, errmsg.SUCCESS
+		return key, global.SUCCESS
 	} else {
-		return nil, errmsg.ERROR
+		return nil, global.SYSTEM_ERROR
 	}
 }
 
@@ -63,10 +63,7 @@ func CheckToken(token string) (*MyClaims, int) {
 func JwtToken(termination bool, needRole int) gin.HandlerFunc {
 	cRes := func(c *gin.Context, code int) {
 		if termination {
-			c.JSON(http.StatusOK, gin.H{
-				"status":  code,
-				"message": errmsg.GetErrMsg(code),
-			})
+			c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
 			c.Abort()
 		}
 	}
@@ -74,26 +71,26 @@ func JwtToken(termination bool, needRole int) gin.HandlerFunc {
 		ckToken := c.GetHeader("Token")
 		if ckToken == "" {
 			//认证字符串判断 !没有认证字符串
-			code = errmsg.ERROR_TOKEN_EXIST
+			code = global.NOT_LOGIN_ERROR
 			cRes(c, code)
 			return
 		}
 		keyData, tCode := CheckToken(ckToken)
-		if tCode == errmsg.ERROR {
+		if tCode == global.SYSTEM_ERROR {
 			//认证字符串判断 !内容不对
-			code = errmsg.ERROR_TOKEN_WRONG
+			code = global.TOKEN_WRONG_ERROR
 			cRes(c, code)
 			return
 		}
 		if keyData.Role > needRole {
 			//认证字符串 权限不够
-			code = errmsg.ERROR_ROLE_LOW
+			code = global.LACK_AUTH_ERROR
 			cRes(c, code)
 			return
 		}
 		if time.Now().Unix() > keyData.ExpiresAt {
 			//认证字符串时间判断 !过期
-			code = errmsg.ERROR_TOKEN_RUNTIME
+			code = global.TOKEN_RUNTIME_ERROR
 			cRes(c, code)
 			return
 		}

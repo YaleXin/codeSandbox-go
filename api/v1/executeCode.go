@@ -16,7 +16,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param executeCodeRequest body dto.ExecuteCodeRequest true "执行代码请求"
-// @Success 200 {object} responses.Response "成功响应"
+// @Success 200 {object} responses.Response{data=dto.ExecuteCodeResponse{executeMessages=[]vo.ExecuteMessageVO}} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/executeCode [post]
@@ -31,7 +31,7 @@ func ExecuteCode(c *gin.Context) {
 			c.JSON(http.StatusOK, baseRes.OK.WithData(executeData))
 		}
 	} else {
-		c.JSON(http.StatusOK, baseRes.Err.WithData("error"))
+		c.JSON(http.StatusOK, baseRes.Err)
 	}
 }
 
