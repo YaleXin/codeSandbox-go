@@ -147,12 +147,30 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "KeyList"
+                ],
                 "summary": "展示用户的密钥对",
                 "responses": {
                     "200": {
                         "description": "成功响应",
                         "schema": {
-                            "$ref": "#/definitions/responses.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/vo.KeyPairVO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -179,6 +197,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Login"
+                ],
                 "summary": "用户登录",
                 "parameters": [
                     {
@@ -195,7 +216,19 @@ const docTemplate = `{
                     "200": {
                         "description": "成功响应",
                         "schema": {
-                            "$ref": "#/definitions/responses.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/vo.UserVO"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -222,12 +255,27 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "NewKey"
+                ],
                 "summary": "生成密钥对",
                 "responses": {
                     "200": {
                         "description": "成功响应",
                         "schema": {
-                            "$ref": "#/definitions/responses.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/vo.KeyPairVO"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -386,6 +434,45 @@ const docTemplate = `{
                 },
                 "timeCost": {
                     "type": "integer"
+                }
+            }
+        },
+        "vo.KeyPairVO": {
+            "type": "object",
+            "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "secretKey": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "vo.UserVO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "description": "权限 0管理员 1 普通用户",
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         }
