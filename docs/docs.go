@@ -138,6 +138,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/user/info": {
+            "get": {
+                "description": "展示用户的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserInfo"
+                ],
+                "summary": "展示用户的信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功响应",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/vo.UserDetialVO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "错误响应",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "系统内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/keys": {
             "get": {
                 "description": "展示用户的密钥对",
@@ -151,6 +210,15 @@ const docTemplate = `{
                     "KeyList"
                 ],
                 "summary": "展示用户的密钥对",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "成功响应",
@@ -259,6 +327,15 @@ const docTemplate = `{
                     "NewKey"
                 ],
                 "summary": "生成密钥对",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "成功响应",
@@ -457,6 +534,38 @@ const docTemplate = `{
                 },
                 "userId": {
                     "type": "integer"
+                }
+            }
+        },
+        "vo.UserDetialVO": {
+            "type": "object",
+            "properties": {
+                "createAt": {
+                    "description": "注册时间",
+                    "type": "string"
+                },
+                "currentUsage": {
+                    "description": "每月已用额度",
+                    "type": "integer"
+                },
+                "email": {
+                    "description": "邮箱",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "monthLimit": {
+                    "description": "每月限额",
+                    "type": "integer"
+                },
+                "role": {
+                    "description": "权限 0管理员 1 普通用户",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         },

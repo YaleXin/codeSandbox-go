@@ -72,6 +72,7 @@ func Login(c *gin.Context) {
 // @Description 生成密钥对，用于通过程序式提交代码
 // @Accept json
 // @Produce json
+// @Param Token header string true "登录凭证，登录成功后会返回该凭证"
 // @Success 200 {object} responses.Response{data=vo.KeyPairVO} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
@@ -94,6 +95,7 @@ func NewKey(c *gin.Context) {
 // @Tags KeyList
 // @Accept json
 // @Produce json
+// @Param Token header string true "登录凭证，登录成功后会返回该凭证"
 // @Success 200 {object} responses.Response{data=[]vo.KeyPairVO} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
@@ -106,6 +108,29 @@ func KeyList(c *gin.Context) {
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(pairs))
+		return
+	}
+}
+
+// UserInfo 展示用户的信息
+// @Summary 展示用户的信息
+// @Description 展示用户的信息
+// @Tags UserInfo
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录凭证，登录成功后会返回该凭证"
+// @Success 200 {object} responses.Response{data=[]vo.UserDetialVO} "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/info [get]
+func UserInfo(c *gin.Context) {
+	instance := &userServices.UserServiceInstance
+	code, info := instance.GetUserInfo(c)
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		return
+	} else {
+		c.JSON(http.StatusOK, baseRes.OK.WithData(info))
 		return
 	}
 }

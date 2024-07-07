@@ -98,6 +98,23 @@ func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO
 	return global.SUCCESS, keyPairVOs
 }
 
+func (userService *UserService) GetUserInfo(c *gin.Context) (int, *vo.UserDetialVO) {
+	// 获取当前登录用户
+	code, loginUser := userService.GetLoginUser(c)
+	if code != global.SUCCESS {
+		return code, nil
+	}
+	// 查询数据库
+	id, err := userDao.GetUserById(loginUser, loginUser.ID)
+	if err != nil {
+		return global.SYSTEM_ERROR, nil
+	}
+	// 转为脱敏 vo
+	var userDetailVO vo.UserDetialVO
+	getUserDetailVO(id, &userDetailVO)
+	return global.SUCCESS, &userDetailVO
+}
+
 func checkLoginUser(user *model.User) bool {
 	return user != nil && !tool.IsBlankString(user.Username) && !tool.IsBlankString(user.Password)
 }
@@ -137,6 +154,16 @@ func getUserVO(user *model.User, token string, userVO *vo.UserVO) {
 	userVO.Username = user.Username
 	userVO.Role = user.Role
 	userVO.Token = token
+}
+
+func getUserDetailVO(user *model.User, userVO *vo.UserDetialVO) {
+	userVO.Id = user.ID
+	userVO.Username = user.Username
+	userVO.Role = user.Role
+	userVO.Email = user.Email
+	userVO.CurrentUsage = user.CurrentUsage
+	userVO.MonthLimit = user.MonthLimit
+	userVO.CreateAt = user.CreatedAt
 }
 
 func (userService *UserService) UserLogout(user model.User) bool {

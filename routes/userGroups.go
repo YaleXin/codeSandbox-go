@@ -23,5 +23,7 @@ func UserGroup(r *gin.Engine) {
 		needLogin.GET("user/keys", api_v1.KeyList)
 		// 生成密钥
 		needLogin.POST("user/newKey", api_v1.NewKey)
+		// 获取用户信息
+		needLogin.GET("user/info", api_v1.UserInfo)
 	}
 }
