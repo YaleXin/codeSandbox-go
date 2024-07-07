@@ -148,8 +148,8 @@ func checkRegisterUser(user *model.User) bool {
 }
 
 func isValidPasswd(password string) bool {
-	// 正则表达式，分别匹配小写字母、大写字母和数字
-	pattern := `(?=.*[a-z])(?=.*[A-Z])(?=.*\d)`
+	// 正则表达式，同时包含小写字母 大小字母 数字
+	pattern := "[a-z].*[A-Z].*\\d|\\d.*[a-z].*[A-Z]|[A-Z].*\\d.*[a-z]"
 	matched, _ := regexp.MatchString(pattern, password)
 	return matched && len(password) >= 8 && len(password) <= 16
 }
@@ -180,7 +180,7 @@ func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegist
 	_, err := userDao.GetUserByName(&user)
 	// 查不到时候会报 error
 	if err == nil {
-		return global.DATA_REPEAT_ERROR
+		return global.USET_REPEAT_ERROR
 	}
 
 	// 使用盐进行加密

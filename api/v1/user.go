@@ -11,7 +11,7 @@ import (
 
 // Register 注册
 // @Summary 用户注册
-// Tags Register
+// @Tags Register
 // @Description 提交用户名，邮箱和密码
 // @Accept json
 // @Produce json

@@ -4,6 +4,7 @@ const (
 	SUCCESS              = 0
 	PARAMS_ERROR         = 40000
 	DATA_REPEAT_ERROR    = 40001
+	USET_REPEAT_ERROR    = 40002
 	NOT_LOGIN_ERROR      = 40100
 	NO_AUTH_ERROR        = 40101
 	LACK_AUTH_ERROR      = 40102
@@ -25,6 +26,7 @@ const (
 var codemsg = map[int]string{
 	SUCCESS:              "OK",
 	PARAMS_ERROR:         "请求参数错误",
+	USET_REPEAT_ERROR:    "用户重复",
 	DATA_REPEAT_ERROR:    "数据重复",
 	NOT_LOGIN_ERROR:      "未登录",
 	TOKEN_WRONG_ERROR:    "Token错误",

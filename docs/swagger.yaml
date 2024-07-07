@@ -289,4 +289,6 @@ paths:
           schema:
             $ref: '#/definitions/responses.Response'
       summary: 用户注册
+      tags:
+      - Register
 swagger: "2.0"

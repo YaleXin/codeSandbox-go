@@ -302,6 +302,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Register"
+                ],
                 "summary": "用户注册",
                 "parameters": [
                     {
