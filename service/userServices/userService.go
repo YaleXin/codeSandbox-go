@@ -5,6 +5,7 @@ import (
 	"codeSandbox/model"
 	"codeSandbox/model/dto"
 	"codeSandbox/model/vo"
+	"codeSandbox/service/executionServices"
 	"codeSandbox/service/keypairService"
 	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
@@ -98,7 +99,7 @@ func (userService *UserService) GetUserKeys(c *gin.Context) (int, []vo.KeyPairVO
 	return global.SUCCESS, keyPairVOs
 }
 
-func (userService *UserService) GetUserInfo(c *gin.Context) (int, *vo.UserDetialVO) {
+func (userService *UserService) GetUserInfo(c *gin.Context) (int, *vo.UserDetailVO) {
 	// 获取当前登录用户
 	code, loginUser := userService.GetLoginUser(c)
 	if code != global.SUCCESS {
@@ -110,7 +111,7 @@ func (userService *UserService) GetUserInfo(c *gin.Context) (int, *vo.UserDetial
 		return global.SYSTEM_ERROR, nil
 	}
 	// 转为脱敏 vo
-	var userDetailVO vo.UserDetialVO
+	var userDetailVO vo.UserDetailVO
 	getUserDetailVO(id, &userDetailVO)
 	return global.SUCCESS, &userDetailVO
 }
@@ -156,7 +157,7 @@ func getUserVO(user *model.User, token string, userVO *vo.UserVO) {
 	userVO.Token = token
 }
 
-func getUserDetailVO(user *model.User, userVO *vo.UserDetialVO) {
+func getUserDetailVO(user *model.User, userVO *vo.UserDetailVO) {
 	userVO.Id = user.ID
 	userVO.Username = user.Username
 	userVO.Role = user.Role
@@ -251,4 +252,17 @@ func (userService *UserService) UserDelete(user *model.User) (*model.User, error
 
 func (userService *UserService) GetUserById(id int) (*model.User, error) {
 	return nil, nil
+}
+
+func (userService *UserService) GetPageExecution(c *gin.Context, page *dto.PageExecutionRequest) (int, *vo.PageDataVO) {
+	// 获取当前登录用户
+	_, loginUser := userService.GetLoginUser(c)
+	// 查询该用户的执行记录
+	instance := executionServices.ExecutionServiceInstance
+	code, executionsVO := instance.PageUserExecution(loginUser, page)
+
+	if code != global.SUCCESS {
+		return code, nil
+	}
+	return global.SUCCESS, executionsVO
 }

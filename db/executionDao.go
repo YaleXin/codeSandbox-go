@@ -28,6 +28,25 @@ func (e *ExecutionDao) ListExecutionByUserId(userId uint) ([]model.Execution, er
 	return executions, nil
 }
 
+func (e *ExecutionDao) PageExecutionByUserId(userId uint, pageSize, pageNumber int64) ([]model.Execution, int64, error) {
+	var executions []model.Execution
+
+	// 使用Preload预加载User关系， 查询总数
+	var count int64
+	result := dBClinet.Where("user_id = ?", userId).Find(&executions).Count(&count)
+	if result.Error != nil {
+		return nil, 0, result.Error // 返回查询过程中可能遇到的错误
+	}
+	// 跳过的记录数
+	offset := (pageNumber - 1) * pageSize
+	result = dBClinet.Where("user_id = ?", userId).Offset(int(offset)).Limit(int(pageSize)).Find(&executions)
+	//result = dBClinet.Where("user_id = ?", userId).Find(&executions).Offset(int(offset)).Limit(int(pageSize))
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	return executions, count, nil
+}
+
 func (e *ExecutionDao) ExecutionAdd(execution *model.Execution) (int64, error) {
 	create := dBClinet.Create(execution)
 	err := create.Error

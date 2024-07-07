@@ -25,5 +25,7 @@ func UserGroup(r *gin.Engine) {
 		needLogin.POST("user/newKey", api_v1.NewKey)
 		// 获取用户信息
 		needLogin.GET("user/info", api_v1.UserInfo)
+		// 获取执行记录
+		needLogin.POST("user/execution", api_v1.PageExecution)
 	}
 }

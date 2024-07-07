@@ -2,7 +2,7 @@ package vo
 
 import "time"
 
-type UserDetialVO struct {
+type UserDetailVO struct {
 	Id           uint      `json:"id"`
 	Username     string    `json:"username"`     //用户名
 	Role         int       `json:"role"`         //权限 0管理员 1 普通用户

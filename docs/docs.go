@@ -138,6 +138,89 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/user/execution": {
+            "post": {
+                "description": "获取用户的代码执行记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PageExecution"
+                ],
+                "summary": "获取用户的代码执行记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "分页信息",
+                        "name": "pageExecutionRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PageExecutionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功响应",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/definitions/vo.PageDataVO"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "data": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "$ref": "#/definitions/vo.ExecutionVO"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "错误响应",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "系统内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/info": {
             "get": {
                 "description": "展示用户的信息",
@@ -174,7 +257,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/vo.UserDetialVO"
+                                                "$ref": "#/definitions/vo.UserDetailVO"
                                             }
                                         }
                                     }
@@ -448,6 +531,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PageExecutionRequest": {
+            "description": "执行记录请求参数",
+            "type": "object",
+            "properties": {
+                "pageNum": {
+                    "description": "页码数",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页大小",
+                    "type": "integer"
+                }
+            }
+        },
         "dto.UserLoginRequest": {
             "description": "用户注册请求参数",
             "type": "object",
@@ -517,6 +614,57 @@ const docTemplate = `{
                 }
             }
         },
+        "vo.ExecutionVO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "代码",
+                    "type": "string"
+                },
+                "createAt": {
+                    "description": "代码执行时间戳",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "id",
+                    "type": "integer"
+                },
+                "inputList": {
+                    "description": "所有的输入用例",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "keyPairId": {
+                    "description": "使用的密钥对ID",
+                    "type": "integer"
+                },
+                "language": {
+                    "description": "编程语言",
+                    "type": "string"
+                },
+                "maxMemoryCost": {
+                    "description": "单个输入用例的最大内存消耗",
+                    "type": "integer"
+                },
+                "maxTimeCost": {
+                    "description": "单个输入用例的最大时间消耗",
+                    "type": "integer"
+                },
+                "outputList": {
+                    "description": "所有的输入用例",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "description": "执行状态",
+                    "type": "integer"
+                }
+            }
+        },
         "vo.KeyPairVO": {
             "type": "object",
             "properties": {
@@ -537,7 +685,23 @@ const docTemplate = `{
                 }
             }
         },
-        "vo.UserDetialVO": {
+        "vo.PageDataVO": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "实际数据"
+                },
+                "pageCount": {
+                    "description": "页码数量",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总数据数目",
+                    "type": "integer"
+                }
+            }
+        },
+        "vo.UserDetailVO": {
             "type": "object",
             "properties": {
                 "createAt": {
