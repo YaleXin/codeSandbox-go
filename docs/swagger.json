@@ -127,6 +127,71 @@
                 }
             }
         },
+        "/api/v1/user/delKey": {
+            "delete": {
+                "description": "删除指定 id 的密钥对",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DeleteKey"
+                ],
+                "summary": "删除指定 id 的密钥对",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "删除表单",
+                        "name": "deleteKeyRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeleteKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功响应",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "错误响应",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "系统内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/execution": {
             "post": {
                 "description": "获取用户的代码执行记录",
@@ -490,6 +555,15 @@
         }
     },
     "definitions": {
+        "dto.DeleteKeyRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "要删除的密钥 id",
+                    "type": "integer"
+                }
+            }
+        },
         "dto.ExecuteCodeRequest": {
             "description": "用户需要提交的代码执行请求参数",
             "type": "object",

@@ -89,6 +89,37 @@ func NewKey(c *gin.Context) {
 	}
 }
 
+// DeleteKey 删除指定 id 的密钥对
+// @Summary 删除指定 id 的密钥对
+// @Tags DeleteKey
+// @Description 删除指定 id 的密钥对
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录凭证，登录成功后会返回该凭证"
+// @Param deleteKeyRequest body dto.DeleteKeyRequest true "删除表单"
+// @Success 200 {object} responses.Response{data=int} "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/delKey [delete]
+func DeleteKey(c *gin.Context) {
+	var data dto.DeleteKeyRequest
+	err := c.ShouldBindJSON(&data)
+	if err != nil {
+		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		return
+	}
+
+	instance := &userServices.UserServiceInstance
+	code, rowsAffected := instance.DeleteKeyPair(c, &data)
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		return
+	} else {
+		c.JSON(http.StatusOK, baseRes.OK.WithData(rowsAffected))
+		return
+	}
+}
+
 // KeyList 展示用户的密钥对
 // @Summary 展示用户的密钥对
 // @Description 展示用户的密钥对

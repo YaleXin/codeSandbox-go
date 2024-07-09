@@ -1,6 +1,9 @@
 package db
 
-import "codeSandbox/model"
+import (
+	"codeSandbox/model"
+	"gorm.io/gorm"
+)
 
 type KeyPairDao struct {
 }
@@ -43,4 +46,19 @@ func (k *KeyPairDao) KeyPairAdd(keypair *model.KeyPair) (int64, error) {
 	}
 	affected := create.RowsAffected
 	return affected, nil
+}
+
+func (k *KeyPairDao) DeleteUserKeyPair(userId, keyId uint) (int64, error) {
+	keyPair := model.KeyPair{
+		Model: gorm.Model{
+			ID: keyId,
+		},
+		UserId: userId,
+	}
+	delete := dBClinet.Delete(&keyPair)
+	err := delete.Error
+	if err != nil {
+		return 0, err
+	}
+	return delete.RowsAffected, nil
 }

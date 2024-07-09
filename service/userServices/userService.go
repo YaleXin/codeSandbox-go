@@ -177,7 +177,7 @@ func checkRegisterUser(user *model.User) bool {
 
 func isValidPasswd(password string) bool {
 	// 正则表达式，同时包含小写字母 大小字母 数字
-	pattern := "[a-z].*[A-Z].*\\d|\\d.*[a-z].*[A-Z]|[A-Z].*\\d.*[a-z]"
+	pattern := "[a-z].*[A-Z].*\\d|[a-z].*\\d.*[A-Z]|[A-Z].*[a-z].*\\d|[A-Z].*\\d.*[a-z]|\\d.*[A-Z].*[a-z]|\\d.*[a-z].*[A-Z]"
 	matched, _ := regexp.MatchString(pattern, password)
 	return matched && len(password) >= 8 && len(password) <= 16
 }
@@ -265,4 +265,13 @@ func (userService *UserService) GetPageExecution(c *gin.Context, page *dto.PageE
 		return code, nil
 	}
 	return global.SUCCESS, executionsVO
+}
+
+func (userService *UserService) DeleteKeyPair(c *gin.Context, deleteKeyRequest *dto.DeleteKeyRequest) (int, int64) {
+	keypairServiceInstance := &keypairService.KeyPairServiceInstance
+	// 获取当前登录用户
+	_, loginUser := userService.GetLoginUser(c)
+	// 删除该用户拥有的指定 keypair
+	code, rowsAffected := keypairServiceInstance.DeleteKeyPairByUserIdAndId(loginUser.ID, deleteKeyRequest.Id)
+	return code, rowsAffected
 }

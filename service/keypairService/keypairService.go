@@ -53,6 +53,15 @@ func (keyPairService *KeyPairService) GenerateUserKey(user *model.User) (int, *m
 	return global.SUCCESS, &keyPair
 }
 
+// 虽然指定 keyid 即可，但是为了安全，该函数只允许用户删除自己的 key
+func (keyPairService *KeyPairService) DeleteKeyPairByUserIdAndId(userId uint, keyId uint) (int, int64) {
+	rowsAffected, err := keyPairDao.DeleteUserKeyPair(userId, keyId)
+	if err != nil {
+		return global.SYSTEM_ERROR, 0
+	}
+	return global.SUCCESS, rowsAffected
+}
+
 // 将密钥对切片转为脱敏后的信息
 func getKeyPairsVO(keys []model.KeyPair) []vo.KeyPairVO {
 	pairVO := make([]vo.KeyPairVO, 0, len(keys))

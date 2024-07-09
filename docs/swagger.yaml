@@ -1,4 +1,10 @@
 definitions:
+  dto.DeleteKeyRequest:
+    properties:
+      id:
+        description: 要删除的密钥 id
+        type: integer
+    type: object
   dto.ExecuteCodeRequest:
     description: 用户需要提交的代码执行请求参数
     properties:
@@ -249,6 +255,46 @@ paths:
       summary: 获取支持的语言列表
       tags:
       - Languages
+  /api/v1/user/delKey:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定 id 的密钥对
+      parameters:
+      - description: 登录凭证，登录成功后会返回该凭证
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 删除表单
+        in: body
+        name: deleteKeyRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeleteKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  type: integer
+              type: object
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 删除指定 id 的密钥对
+      tags:
+      - DeleteKey
   /api/v1/user/execution:
     post:
       consumes:
