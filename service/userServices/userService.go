@@ -275,3 +275,30 @@ func (userService *UserService) DeleteKeyPair(c *gin.Context, deleteKeyRequest *
 	code, rowsAffected := keypairServiceInstance.DeleteKeyPairByUserIdAndId(loginUser.ID, deleteKeyRequest.Id)
 	return code, rowsAffected
 }
+
+func (userService *UserService) ChangePassword(c *gin.Context, changePasswordRequest *dto.ChangePasswordRequest) int {
+	// 获取当前登录用户
+	_, loginUser := userService.GetLoginUser(c)
+	// 根据 token 中的信息，获取到 username
+	// 再根据 username 查询数据库
+	databaseUser, err := userDao.GetUserByName(loginUser)
+	// 查不到时，会返回错误，即 我们分发的 token 出错
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
+	// 查到后，比对密码
+	submitUser := model.User{
+		Password: changePasswordRequest.OldPassword,
+	}
+	if !verifyPwd(&submitUser, databaseUser) {
+		return global.PWD_ERROR
+	}
+	// 修改密码（继续使用盐加密）
+	md5Str := encryptPwdWithSalt(changePasswordRequest.NewPassword, databaseUser.Salt)
+	databaseUser.Password = md5Str
+	_, err = userDao.UpdateUserById(databaseUser)
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
+	return global.SUCCESS
+}

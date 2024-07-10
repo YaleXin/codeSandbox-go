@@ -166,6 +166,37 @@ func UserInfo(c *gin.Context) {
 	}
 }
 
+// ChangePassword 修改密码
+// @Summary 修改密码
+// @Description 修改密码
+// @Tags ChangePassword
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录凭证，登录成功后会返回该凭证"
+// @Param changePasswordRequest body dto.ChangePasswordRequest true "修改密码表单"
+// @Success 200 {object} responses.Response{data=int} "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/user/changePwd [put]
+func ChangePassword(c *gin.Context) {
+	var data dto.ChangePasswordRequest
+	err := c.ShouldBindJSON(&data)
+	if err != nil {
+		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		return
+	}
+
+	instance := &userServices.UserServiceInstance
+	code := instance.ChangePassword(c, &data)
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		return
+	} else {
+		c.JSON(http.StatusOK, baseRes.OK.WithData(1))
+		return
+	}
+}
+
 // PageExecution 获取用户的代码执行记录
 // @Summary 获取用户的代码执行记录
 // @Description 获取用户的代码执行记录

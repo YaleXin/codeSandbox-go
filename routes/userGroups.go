@@ -30,6 +30,8 @@ func UserGroup(r *gin.Engine) {
 	{
 		// 获取用户信息
 		needLogin.GET("user/info", api_v1.UserInfo)
+		// 修改密码
+		needLogin.PUT("user/changePwd", api_v1.ChangePassword)
 	}
 
 	{

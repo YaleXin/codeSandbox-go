@@ -138,6 +138,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/user/changePwd": {
+            "put": {
+                "description": "修改密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChangePassword"
+                ],
+                "summary": "修改密码",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "修改密码表单",
+                        "name": "changePasswordRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功响应",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "错误响应",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "系统内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/delKey": {
             "delete": {
                 "description": "删除指定 id 的密钥对",
@@ -566,6 +631,19 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ChangePasswordRequest": {
+            "type": "object",
+            "properties": {
+                "newPassword": {
+                    "description": "新密码",
+                    "type": "string"
+                },
+                "oldPassword": {
+                    "description": "旧密码",
+                    "type": "string"
+                }
+            }
+        },
         "dto.DeleteKeyRequest": {
             "type": "object",
             "properties": {

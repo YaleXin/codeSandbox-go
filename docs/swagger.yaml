@@ -1,4 +1,13 @@
 definitions:
+  dto.ChangePasswordRequest:
+    properties:
+      newPassword:
+        description: 新密码
+        type: string
+      oldPassword:
+        description: 旧密码
+        type: string
+    type: object
   dto.DeleteKeyRequest:
     properties:
       id:
@@ -255,6 +264,46 @@ paths:
       summary: 获取支持的语言列表
       tags:
       - Languages
+  /api/v1/user/changePwd:
+    put:
+      consumes:
+      - application/json
+      description: 修改密码
+      parameters:
+      - description: 登录凭证，登录成功后会返回该凭证
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 修改密码表单
+        in: body
+        name: changePasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  type: integer
+              type: object
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 修改密码
+      tags:
+      - ChangePassword
   /api/v1/user/delKey:
     delete:
       consumes:
