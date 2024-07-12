@@ -163,14 +163,21 @@ func runCode(containerId string, dockerInfo utilsType.DockerInfo, inputList []st
 	runSplit := strings.Split(runCmd, " ")
 	// 由于对于每个执行用例都做了“强的”超时控制，这里只对总的执行时间做“弱的”超时控制
 	startT := time.Now()
-	for _, inputStr := range inputList {
-		runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr, "run", user)
+	// 如果没有输入用例，则至少跑一次，否则，每个输入用例跑一次
+	if len(inputList) == 0 {
+		runRes := runCmdByContainer(containerId, runSplit, workDir, "", "run", user)
 		messages = append(messages, runRes)
-		tc := time.Since(startT)
-		if tc.Seconds() > float64(TOTAL_CODE_TIMEOUT)/float64(time.Second) {
-			break
+	} else {
+		for _, inputStr := range inputList {
+			runRes := runCmdByContainer(containerId, runSplit, workDir, inputStr, "run", user)
+			messages = append(messages, runRes)
+			tc := time.Since(startT)
+			if tc.Seconds() > float64(TOTAL_CODE_TIMEOUT)/float64(time.Second) {
+				break
+			}
 		}
 	}
+
 	return messages
 }
 func (sandbox *SandBox) saveFile(code string) (fs.File, string) {

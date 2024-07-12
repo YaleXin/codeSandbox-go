@@ -198,6 +198,11 @@ paths:
       - application/json
       description: 根据用户提交的代码和语言执行代码并返回结果
       parameters:
+      - description: 登录凭证，登录成功后会返回该凭证
+        in: header
+        name: Token
+        required: true
+        type: string
       - description: 执行代码请求
         in: body
         name: executeCodeRequest

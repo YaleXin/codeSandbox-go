@@ -1,7 +1,8 @@
 package middleware
 
 import (
-	"codeSandbox/db"
+	redisDb "codeSandbox/db"
+	baseRes "codeSandbox/responses"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -9,11 +10,9 @@ import (
 
 func RateMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 如果ip请求连接数在两秒内超过30次，返回429并抛出error
-		if !db.Allow(c.ClientIP(), 30, 2*time.Second) {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "too many requests",
-			})
+		// 如果ip请求连接数在 2 秒内超过 10 次，返回 429 并抛出error
+		if !redisDb.Allow(c.ClientIP(), 10, 2*time.Second) {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, baseRes.ErrTooManyRequests)
 			return
 		}
 		c.Next()

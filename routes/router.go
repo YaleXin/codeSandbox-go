@@ -45,9 +45,9 @@ func Starter() {
 	r.MaxMultipartMemory = 8 << 20                 // 8 MiB
 	r.Use(middleware.Logger(log.StandardLogger())) // 使用Logger记录日志
 	r.Use(gin.Recovery())                          // 恐慌恢复
-	// TODO 开启限流
-	// r.Use(middleware.RateMiddleware())             // 速率限制
-	r.Use(middleware.Cors()) // 跨域处理
+
+	r.Use(middleware.RateMiddleware()) // 速率限制
+	r.Use(middleware.Cors())           // 跨域处理
 	// 绑定沙箱路由处理函数
 	SandboxGroup(r)
 	// 用户相关

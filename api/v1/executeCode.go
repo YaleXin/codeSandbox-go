@@ -15,6 +15,7 @@ import (
 // @Tags Code Execution
 // @Accept json
 // @Produce json
+// @Param Token header string true "登录凭证，登录成功后会返回该凭证"
 // @Param executeCodeRequest body dto.ExecuteCodeRequest true "执行代码请求"
 // @Success 200 {object} responses.Response{data=dto.ExecuteCodeResponse{executeMessages=[]vo.ExecuteMessageVO}} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"

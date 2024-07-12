@@ -2,7 +2,7 @@ package global
 
 const (
 	NORMAL_USER_ROLE = int(10)
-	ADMIN_USER_ROLE  = int(0)
+	ADMIN_USER_ROLE  = int(1)
 )
 const (
 	// 执行记录状态

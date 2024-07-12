@@ -30,6 +30,13 @@ const docTemplate = `{
                 "summary": "执行代码",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "登录凭证，登录成功后会返回该凭证",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "执行代码请求",
                         "name": "executeCodeRequest",
                         "in": "body",
