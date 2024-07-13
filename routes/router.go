@@ -46,8 +46,8 @@ func Starter() {
 	r.Use(middleware.Logger(log.StandardLogger())) // 使用Logger记录日志
 	r.Use(gin.Recovery())                          // 恐慌恢复
 
-	r.Use(middleware.RateMiddleware()) // 速率限制
-	r.Use(middleware.Cors())           // 跨域处理
+	r.Use(middleware.GlobalRateMiddleware()) // 速率限制
+	r.Use(middleware.Cors())                 // 跨域处理
 	// 沙箱路由注册
 	SandboxGroup(r)
 	// 用户相关路由注册

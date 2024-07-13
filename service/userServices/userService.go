@@ -171,8 +171,17 @@ func (userService *UserService) UserLogout(user model.User) bool {
 	return false
 }
 
-func checkRegisterUser(user *model.User) bool {
-	return !tool.IsStructEmpty(user) && isValidPasswd(user.Password) && isValidEmail(user.Email)
+func checkRegisterUser(user *model.User) int {
+	if tool.IsStructEmpty(user) {
+		return global.PARAMS_ERROR
+	}
+	if !isValidPasswd(user.Password) {
+		return global.PWD_FORMAT_ERROR
+	}
+	if !isValidEmail(user.Email) {
+		return global.EMAIL_FORMAT_ERROR
+	}
+	return global.SUCCESS
 }
 
 func isValidPasswd(password string) bool {
@@ -202,8 +211,9 @@ func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegist
 		Password: userRegisterRequest.Password,
 		Email:    userRegisterRequest.Email,
 	}
-	if !checkRegisterUser(&user) {
-		return global.PARAMS_ERROR
+	checkCode := checkRegisterUser(&user)
+	if checkCode != global.SUCCESS {
+		return checkCode
 	}
 	_, err := userDao.GetUserByName(&user)
 	// 查不到时候会报 error

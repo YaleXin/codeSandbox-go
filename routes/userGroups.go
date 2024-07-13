@@ -11,10 +11,10 @@ func UserGroup(r *gin.Engine) {
 	needCaptcha := r.Group("api/v1")
 	needCaptcha.Use(middleware.JwtCaptchaToken())
 	{
-		// 注册
-		needCaptcha.POST("user/register", api_v1.Register)
-		// 登录
-		needCaptcha.POST("user/login", api_v1.Login)
+		// 注册（同时添加防抖）
+		needCaptcha.POST("user/register", middleware.RegisterRateMiddleware(), api_v1.Register)
+		// 登录（同时添加防抖）
+		needCaptcha.POST("user/login", middleware.LoginRateMiddleware(), api_v1.Login)
 	}
 
 	needLogin := r.Group("api/v1")

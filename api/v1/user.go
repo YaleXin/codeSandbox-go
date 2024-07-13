@@ -53,15 +53,18 @@ func Register(c *gin.Context) {
 // @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/user/login [post]
 func Login(c *gin.Context) {
-	var data dto.UserLoginRequest
-	err := c.ShouldBindJSON(&data)
-	if err != nil {
+	get, exists := c.Get("userLoginRequest")
+	if !exists {
 		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 		return
 	}
-
+	data, ok := get.(*dto.UserLoginRequest)
+	if !ok {
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
+		return
+	}
 	instance := &userServices.UserServiceInstance
-	code, userVO := instance.UserLogin(&data, c)
+	code, userVO := instance.UserLogin(data, c)
 	if code != global.SUCCESS {
 		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
