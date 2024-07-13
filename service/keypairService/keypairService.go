@@ -35,6 +35,13 @@ func (keyPairService *KeyPairService) GetUserKeys(loginUser *model.User) (int, [
 	return global.SUCCESS, getKeyPairsVO(keys)
 }
 func (keyPairService *KeyPairService) GenerateUserKey(user *model.User) (int, *model.KeyPair) {
+	keyList, err := keyPairDao.ListKeyPairByUserId(user.ID)
+	if err != nil {
+		return global.SYSTEM_ERROR, nil
+	}
+	if len(keyList) >= global.MAINTAIN_KEY_MAX_LEN {
+		return global.TOO_KEY_ERROR, nil
+	}
 	service := cryptoServices.CryptoService{}
 	pub, pri, err := service.GenerateRSAKeyPairBase64()
 	if err != nil {
