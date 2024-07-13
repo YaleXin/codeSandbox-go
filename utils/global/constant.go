@@ -14,4 +14,5 @@ const (
 	// 用户体验时间（单位为天）
 	USER_VALIDITY_PERIOD = 7
 	CAPTCHA_LEN          = 5
+	INPUT_LIST_MAX_LEN   = 5
 )

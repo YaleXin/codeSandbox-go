@@ -71,11 +71,14 @@ func (sandboxService *SandboxService) ProgramExecuteCode(c *gin.Context, program
 	}
 	// 4.
 	code, executeCode := sandboxService.ExecuteCode(c, executeCodeRequest, keyPair)
-	return code, &executeCode
+	return code, executeCode
 }
 
 // 要么是用户提供 accesskey 的方式调用， 要么是用户登录后调用
-func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeRequest dto.ExecuteCodeRequest, keyPair *model.KeyPair) (int, dto.ExecuteCodeResponse) {
+func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeRequest dto.ExecuteCodeRequest, keyPair *model.KeyPair) (int, *dto.ExecuteCodeResponse) {
+	if len(executeCodeRequest.InputList) > global.INPUT_LIST_MAX_LEN {
+		return global.TOO_MANY_INPUT_ERROR, nil
+	}
 	// 找出该语言对应的 dockerinfo 对象
 	language := executeCodeRequest.Language
 	byLanguage := getDockerInfoByLanguage(language)
@@ -86,7 +89,7 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	var execution model.Execution
 	code := addExecutionRecord(c, &executeCodeRequest, &execution, keyPair)
 	if code != global.SUCCESS {
-		return code, dto.ExecuteCodeResponse{}
+		return code, nil
 	}
 	// 获取每个执行用例的输出
 	executeMessages := box.ExecuteCode(&executeCodeRequest)
@@ -98,7 +101,7 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	for _, executeMessage := range executeMessages {
 		executeCodeResponse.ExecuteMessages = append(executeCodeResponse.ExecuteMessages, executeMessage.ToVO())
 	}
-	return global.SUCCESS, executeCodeResponse
+	return global.SUCCESS, &executeCodeResponse
 }
 
 func updateExecutionRecord(execution *model.Execution, messages []dto.ExecuteMessage) int {
