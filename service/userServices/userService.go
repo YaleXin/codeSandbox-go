@@ -41,6 +41,12 @@ func (userService *UserService) CheckAndUpdateUserUsage(userId uint) int {
 	if err != nil {
 		return global.NOT_FOUND_USER_ERROR
 	}
+	if user.Ban {
+		return global.BAN_ERROR
+	}
+	if !user.Audit {
+		return global.NOT_AUDIT_ERROR
+	}
 	// TODO 把过期时间去掉
 	createdAt := user.CreatedAt
 	now := time.Now()
@@ -77,6 +83,7 @@ func (userService *UserService) GetLoginUser(c *gin.Context) (int, *model.User) 
 				ID: myClaims.UserId,
 			},
 			Username: myClaims.Username,
+			Audit:    myClaims.Audit,
 		}
 	} else {
 		// 断言失败，anyValue不是 MyClaims 类型
@@ -140,7 +147,10 @@ func (userService *UserService) UserLogin(submitUserRequest *dto.UserLoginReques
 	if !verifyPwd(&submitUser, &databaseUser) {
 		return global.PWD_ERROR, nil
 	}
-	token, tCode := middleware.SetToken(databaseUser.ID, databaseUser.Username, databaseUser.Role)
+	if databaseUser.Ban {
+		return global.BAN_ERROR, nil
+	}
+	token, tCode := middleware.SetToken(databaseUser.ID, databaseUser.Username, databaseUser.Role, databaseUser.Audit)
 	if tCode != global.SUCCESS {
 		return tCode, nil
 
@@ -228,6 +238,8 @@ func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegist
 	user.Password = md5Str
 	user.Salt = salt
 	user.Role = global.NORMAL_USER_ROLE
+	user.Audit = false
+	user.Ban = false
 	_, err = userDao.UserAdd(&user)
 	if err != nil {
 		return global.SYSTEM_ERROR
@@ -239,6 +251,10 @@ func (userService *UserService) GenerateKeyPair(c *gin.Context) (int, *vo.KeyPai
 	code, loginUser := userService.GetLoginUser(c)
 	if code != global.SUCCESS {
 		return code, nil
+	}
+	// 未审核的无法新建 key
+	if !loginUser.Audit {
+		return global.NOT_AUDIT_ERROR, nil
 	}
 	keypairServiceInstance := &keypairService.KeyPairServiceInstance
 	code, keyPair := keypairServiceInstance.GenerateUserKey(loginUser)

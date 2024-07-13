@@ -18,16 +18,18 @@ type MyClaims struct {
 	UserId   uint   `json:"userId"`
 	Username string `json:"username"`
 	Role     int    `json:"role"`
+	Audit    bool   `json:"audit"`
 	jwt.StandardClaims
 }
 
 // SetToken 生成token
-func SetToken(userId uint, username string, role int) (string, int) {
+func SetToken(userId uint, username string, role int, audit bool) (string, int) {
 	expireTime := time.Now().Add(JWT_EXPIRE_TIME)
 	SetClaims := MyClaims{
 		userId,
 		username,
 		role,
+		audit,
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			Issuer:    "codeSandbox",
