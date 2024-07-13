@@ -12,7 +12,6 @@ import (
 
 var JWT_KEY = []byte(utils.Config.Server.JwtKey)
 var JWT_EXPIRE_TIME = time.Duration(utils.Config.Server.JwtExpireTime) * time.Minute
-var code int
 
 // jwt 中要加密的内容
 type MyClaims struct {
@@ -51,6 +50,10 @@ func CheckToken(token string) (*MyClaims, int) {
 		return nil, global.SYSTEM_ERROR
 	}
 	if key, ok := setToken.Claims.(*MyClaims); ok && setToken.Valid {
+		// 如果 id 为 0 ，则是错的，因为我们返回的必然是一个正确的
+		if key.UserId == 0 {
+			return nil, global.TOKEN_WRONG_ERROR
+		}
 		return key, global.SUCCESS
 	} else {
 		return nil, global.SYSTEM_ERROR
@@ -71,26 +74,25 @@ func JwtToken(termination bool, needRole int) gin.HandlerFunc {
 		ckToken := c.GetHeader("Token")
 		if ckToken == "" {
 			//认证字符串判断 !没有认证字符串
-			code = global.NOT_LOGIN_ERROR
+			code := global.NOT_LOGIN_ERROR
 			cRes(c, code)
 			return
 		}
 		//认证字符串判断 !（token是否正确）
 		keyData, tCode := CheckToken(ckToken)
-		if tCode == global.SYSTEM_ERROR {
-			code = global.TOKEN_WRONG_ERROR
-			cRes(c, code)
+		if tCode != global.SUCCESS {
+			cRes(c, tCode)
 			return
 		}
 		if keyData.Role > needRole {
 			//认证字符串 权限不够
-			code = global.LACK_AUTH_ERROR
+			code := global.LACK_AUTH_ERROR
 			cRes(c, code)
 			return
 		}
 		if time.Now().Unix() > keyData.ExpiresAt {
 			//认证字符串时间判断 !过期
-			code = global.TOKEN_RUNTIME_ERROR
+			code := global.TOKEN_RUNTIME_ERROR
 			cRes(c, code)
 			return
 		}

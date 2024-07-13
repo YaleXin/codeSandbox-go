@@ -51,6 +51,9 @@ func CheckCaptchaToken(token string) (*CaptchaClaims, int) {
 		return nil, global.SYSTEM_ERROR
 	}
 	if key, ok := captchaToken.Claims.(*CaptchaClaims); ok && captchaToken.Valid {
+		if key.CaptchaContentMd5 == "" {
+			return nil, global.TOKEN_WRONG_ERROR
+		}
 		return key, global.SUCCESS
 	} else {
 		return nil, global.SYSTEM_ERROR
@@ -80,9 +83,8 @@ func JwtCaptchaToken() gin.HandlerFunc {
 		}
 		//认证字符串判断 !（token是否是有效）
 		keyData, tCode := CheckCaptchaToken(ckToken)
-		if tCode == global.SYSTEM_ERROR {
-			errCode := global.TOKEN_WRONG_ERROR
-			cRes(c, errCode)
+		if tCode != global.SUCCESS {
+			cRes(c, tCode)
 			return
 		}
 		if time.Now().Unix() > keyData.ExpiresAt {
