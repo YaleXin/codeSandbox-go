@@ -1,6 +1,9 @@
 package responses
 
-import "encoding/json"
+import (
+	"codeSandbox/utils/global"
+	"encoding/json"
+)
 
 // 通用返回结构体和函数
 
@@ -47,10 +50,18 @@ func (res *Response) ToString() string {
 }
 
 // 构造函数
-func myResponse(code int, msg string) *Response {
+func myResponse(code int) *Response {
 	return &Response{
 		Code: code,
-		Msg:  msg,
+		Msg:  "msg",
+		Data: nil,
+	}
+}
+
+func ErrByCode(code int) *Response {
+	return &Response{
+		Code: code,
+		Msg:  global.GetErrMsg(code),
 		Data: nil,
 	}
 }

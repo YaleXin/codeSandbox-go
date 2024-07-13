@@ -26,14 +26,14 @@ func Register(c *gin.Context) {
 	var data dto.UserRegisterRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 		return
 	}
 
 	instance := &userServices.UserServiceInstance
 	errCode := instance.UserRegister(&data, c)
 	if errCode != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(errCode)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(errCode))
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK)
 	}
@@ -56,14 +56,14 @@ func Login(c *gin.Context) {
 	var data dto.UserLoginRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 		return
 	}
 
 	instance := &userServices.UserServiceInstance
 	code, userVO := instance.UserLogin(&data, c)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	}
 
@@ -85,7 +85,7 @@ func NewKey(c *gin.Context) {
 	instance := &userServices.UserServiceInstance
 	code, vo := instance.GenerateKeyPair(c)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(vo))
@@ -109,14 +109,14 @@ func DeleteKey(c *gin.Context) {
 	var data dto.DeleteKeyRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 		return
 	}
 
 	instance := &userServices.UserServiceInstance
 	code, rowsAffected := instance.DeleteKeyPair(c, &data)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(rowsAffected))
@@ -139,7 +139,7 @@ func KeyList(c *gin.Context) {
 	instance := &userServices.UserServiceInstance
 	code, pairs := instance.GetUserKeys(c)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(pairs))
@@ -162,7 +162,7 @@ func UserInfo(c *gin.Context) {
 	instance := &userServices.UserServiceInstance
 	code, info := instance.GetUserInfo(c)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(info))
@@ -186,14 +186,14 @@ func ChangePassword(c *gin.Context) {
 	var data dto.ChangePasswordRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 		return
 	}
 
 	instance := &userServices.UserServiceInstance
 	code := instance.ChangePassword(c, &data)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(1))
@@ -218,14 +218,14 @@ func PageExecution(c *gin.Context) {
 	var data dto.PageExecutionRequest
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(global.PARAMS_ERROR)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 		return
 	}
 
 	instance := &userServices.UserServiceInstance
 	code, info := instance.GetPageExecution(c, &data)
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(info))

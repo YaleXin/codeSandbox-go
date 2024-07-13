@@ -63,7 +63,7 @@ func CheckToken(token string) (*MyClaims, int) {
 func JwtToken(termination bool, needRole int) gin.HandlerFunc {
 	cRes := func(c *gin.Context, code int) {
 		if termination {
-			c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+			c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 			c.Abort()
 		}
 	}

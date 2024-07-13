@@ -27,7 +27,7 @@ func ExecuteCode(c *gin.Context) {
 		sandboxService := service.SandboxService{}
 		code, executeData := sandboxService.ExecuteCode(c, exeRequest, nil)
 		if code != global.SUCCESS {
-			c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+			c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		} else {
 			c.JSON(http.StatusOK, baseRes.OK.WithData(executeData))
 		}
@@ -42,7 +42,7 @@ func ProgramExecuteCode(c *gin.Context) {
 		sandboxService := service.SandboxService{}
 		code, executeCode := sandboxService.ProgramExecuteCode(c, &programExecuteCodeRequest)
 		if code != global.SUCCESS {
-			c.JSON(http.StatusOK, baseRes.Err.WithData(global.GetErrMsg(code)))
+			c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 			return
 		} else {
 			c.JSON(http.StatusOK, baseRes.OK.WithData(executeCode))

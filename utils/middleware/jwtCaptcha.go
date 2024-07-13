@@ -60,7 +60,7 @@ func CheckCaptchaToken(token string) (*CaptchaClaims, int) {
 // JwtCaptchaToken jwt中间件
 func JwtCaptchaToken() gin.HandlerFunc {
 	cRes := func(c *gin.Context, code int) {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		c.Abort()
 	}
 	return func(c *gin.Context) {

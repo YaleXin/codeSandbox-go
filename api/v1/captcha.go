@@ -22,7 +22,7 @@ func Captcha(c *gin.Context) {
 	instance := &captchaServices.CaptchaServiceInstance
 	code, vo := instance.GenerateCaptchaToken()
 	if code != global.SUCCESS {
-		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
 		return
 	} else {
 		c.JSON(http.StatusOK, baseRes.OK.WithData(vo))
