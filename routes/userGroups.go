@@ -8,12 +8,13 @@ import (
 )
 
 func UserGroup(r *gin.Engine) {
-	router := r.Group("api/v1")
+	needCaptcha := r.Group("api/v1")
+	needCaptcha.Use(middleware.JwtCaptchaToken())
 	{
 		// 注册
-		router.POST("user/register", api_v1.Register)
+		needCaptcha.POST("user/register", api_v1.Register)
 		// 登录
-		router.POST("user/login", api_v1.Login)
+		needCaptcha.POST("user/login", api_v1.Login)
 	}
 
 	needLogin := r.Group("api/v1")

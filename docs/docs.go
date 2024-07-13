@@ -15,6 +15,53 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/captcha": {
+            "get": {
+                "description": "生成验证码，需要用验证码的地方有登录和注册",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Captcha"
+                ],
+                "summary": "生成验证码",
+                "responses": {
+                    "200": {
+                        "description": "成功响应",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/responses.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/vo.CaptchaVO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "错误响应",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "系统内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/responses.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/executeCode": {
             "post": {
                 "description": "根据用户提交的代码和语言执行代码并返回结果",
@@ -498,6 +545,20 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/dto.UserLoginRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "验证码凭证，获取”验证码“接口后会返回该凭证",
+                        "name": "CPT-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "验证码,对应于图片中的内容",
+                        "name": "captcha",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -605,6 +666,13 @@ const docTemplate = `{
                 "summary": "用户注册",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "验证码凭证，获取”验证码“接口后会返回该凭证",
+                        "name": "CPT-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "用户信息",
                         "name": "userRegisterRequest",
                         "in": "body",
@@ -612,6 +680,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/dto.UserRegisterRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "验证码,对应于图片中的内容",
+                        "name": "captcha",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -748,6 +823,19 @@ const docTemplate = `{
                 },
                 "msg": {
                     "description": "错误描述",
+                    "type": "string"
+                }
+            }
+        },
+        "vo.CaptchaVO": {
+            "type": "object",
+            "properties": {
+                "imageBase64": {
+                    "description": "验证码 base64",
+                    "type": "string"
+                },
+                "token": {
+                    "description": "登录和注册要带上",
                     "type": "string"
                 }
             }
@@ -899,7 +987,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "role": {
-                    "description": "权限 0管理员 1 普通用户",
+                    "description": "权限 1:管理员 10: 普通用户",
                     "type": "integer"
                 },
                 "token": {

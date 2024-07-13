@@ -44,3 +44,16 @@ func GenerateRandomVisibleString(length int) string {
 	}
 	return string(b)
 }
+
+// 随机简单字符串(去除容易识别错误的)生成函数
+const easyVisibleChars = "3478acdefghjkmnprtwxyACDEFGHJKMNPRTWXY"
+
+func GenerateRandomEasyVisibleString(length int) string {
+	rand.Seed(time.Now().UnixNano())
+
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = easyVisibleChars[rand.Intn(len(easyVisibleChars))]
+	}
+	return string(b)
+}

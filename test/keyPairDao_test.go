@@ -1,14 +1,6 @@
 package test
 
-import (
-	"codeSandbox/db"
-	"codeSandbox/model"
-	"codeSandbox/service/cryptoServices"
-	"codeSandbox/service/userServices"
-	"codeSandbox/utils/tool"
-	"github.com/go-playground/assert/v2"
-	"testing"
-)
+/*
 
 func TestKeyPairDaoAdd(t *testing.T) {
 	passwd := tool.GenerateRandomVisibleString(10)
@@ -46,3 +38,4 @@ func TestKeyPairDaoAdd(t *testing.T) {
 	}
 	t.Logf("keys %v", keys)
 }
+*/

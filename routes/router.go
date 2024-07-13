@@ -48,10 +48,13 @@ func Starter() {
 
 	r.Use(middleware.RateMiddleware()) // 速率限制
 	r.Use(middleware.Cors())           // 跨域处理
-	// 绑定沙箱路由处理函数
+	// 沙箱路由注册
 	SandboxGroup(r)
-	// 用户相关
+	// 用户相关路由注册
 	UserGroup(r)
+	// 验证码路由注册
+	CaptchaGroup(r)
+
 	log.Info("init router run~")
 	err := r.Run(fmt.Sprintf("%s:%s", utils.Config.Server.Host, utils.Config.Server.Port))
 	if err != nil {

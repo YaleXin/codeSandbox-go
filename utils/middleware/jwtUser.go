@@ -75,9 +75,9 @@ func JwtToken(termination bool, needRole int) gin.HandlerFunc {
 			cRes(c, code)
 			return
 		}
+		//认证字符串判断 !（token是否正确）
 		keyData, tCode := CheckToken(ckToken)
 		if tCode == global.SYSTEM_ERROR {
-			//认证字符串判断 !内容不对
 			code = global.TOKEN_WRONG_ERROR
 			cRes(c, code)
 			return

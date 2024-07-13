@@ -121,7 +121,7 @@ func checkLoginUser(user *model.User) bool {
 }
 
 // 返回执行结果，用户id， jwt token
-func (userService *UserService) UserLogin(submitUserRequest *dto.UserLoginRequest) (int, *vo.UserVO) {
+func (userService *UserService) UserLogin(submitUserRequest *dto.UserLoginRequest, c *gin.Context) (int, *vo.UserVO) {
 	submitUser := model.User{
 		Username: submitUserRequest.Username,
 		Password: submitUserRequest.Password,
@@ -196,7 +196,7 @@ func encryptPwdWithSalt(pwd string, salt string) string {
 	return tool.MD5Str(pwd + salt)
 }
 
-func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegisterRequest) int {
+func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegisterRequest, c *gin.Context) int {
 	user := model.User{
 		Username: userRegisterRequest.Username,
 		Password: userRegisterRequest.Password,

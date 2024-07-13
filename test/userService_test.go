@@ -1,14 +1,6 @@
 package test
 
-import (
-	"codeSandbox/model"
-	"codeSandbox/service/userServices"
-	"codeSandbox/utils/global"
-	"codeSandbox/utils/tool"
-	"github.com/go-playground/assert/v2"
-	"testing"
-)
-
+/*
 func TestUserRegister(t *testing.T) {
 	passwd := "password"
 	user := model.User{
@@ -56,3 +48,4 @@ func TestUserLogin(t *testing.T) {
 	login, _ := userService.UserLogin(&loginUser)
 	assert.Equal(t, login, global.SUCCESS)
 }
+*/

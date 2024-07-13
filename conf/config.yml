@@ -7,6 +7,10 @@ Server:
   JwtKey: xxxxx
   # Jwt 过期时间，单位为 minutes
   JwtExpireTime: 10
+  # 图片验证码过期时间，单位为 minutes
+  CaptchaExpireTime: 2
+  # 图片验证码 MD5 哈希前缀
+  CaptchaKey: yyyy
   Database:
     Type: mysql
     Host: localhost

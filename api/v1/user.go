@@ -15,7 +15,9 @@ import (
 // @Description 提交用户名，邮箱和密码
 // @Accept json
 // @Produce json
+// @Param CPT-Token header string true "验证码凭证，获取”验证码“接口后会返回该凭证"
 // @Param userRegisterRequest body dto.UserRegisterRequest true "用户信息"
+// @Param captcha query string true "验证码,对应于图片中的内容"
 // @Success 200 {object} responses.Response "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
@@ -29,7 +31,7 @@ func Register(c *gin.Context) {
 	}
 
 	instance := &userServices.UserServiceInstance
-	errCode := instance.UserRegister(&data)
+	errCode := instance.UserRegister(&data, c)
 	if errCode != global.SUCCESS {
 		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(errCode)))
 	} else {
@@ -44,6 +46,8 @@ func Register(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param userLoginRequest body dto.UserLoginRequest true "登录表单"
+// @Param CPT-Token header string true "验证码凭证，获取”验证码“接口后会返回该凭证"
+// @Param captcha query string true "验证码,对应于图片中的内容"
 // @Success 200 {object} responses.Response{data=vo.UserVO} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
@@ -57,7 +61,7 @@ func Login(c *gin.Context) {
 	}
 
 	instance := &userServices.UserServiceInstance
-	code, userVO := instance.UserLogin(&data)
+	code, userVO := instance.UserLogin(&data, c)
 	if code != global.SUCCESS {
 		c.JSON(http.StatusOK, baseRes.Err.WithMsg(global.GetErrMsg(code)))
 		return
