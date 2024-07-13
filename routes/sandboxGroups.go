@@ -18,11 +18,11 @@ func SandboxGroup(r *gin.Engine) {
 	needLogin := r.Group("api/v1")
 	needLogin.Use(middleware.JwtToken(true, global.NORMAL_USER_ROLE))
 	{
-		needLogin.POST("executeCode", v1.ExecuteCode)
+		needLogin.POST("executeCode", middleware.ExecuteCodeRateMiddleware(), v1.ExecuteCode)
 	}
 	// 程序方式执行（需要使用 secretKey 加密数据， 并提供 publicKey ）
 	program := r.Group("api/v1")
 	{
-		program.POST("programExecuteCode", v1.ProgramExecuteCode)
+		program.POST("programExecuteCode", middleware.ProgramExecuteCodeRateMiddleware(), v1.ProgramExecuteCode)
 	}
 }

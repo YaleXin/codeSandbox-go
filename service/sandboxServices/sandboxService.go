@@ -82,6 +82,9 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	// 找出该语言对应的 dockerinfo 对象
 	language := executeCodeRequest.Language
 	byLanguage := getDockerInfoByLanguage(language)
+	if byLanguage.Language == "" {
+		return global.LANGUAGE_NOT_SURPPORT_ERROR, nil
+	}
 	box := sandboxDockerServices.SandBox{
 		DockerInfo: byLanguage,
 	}

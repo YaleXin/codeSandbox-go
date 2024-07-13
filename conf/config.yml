@@ -54,6 +54,19 @@ Server:
       To:
       Host: smtp.qq.com
       Port: 25
+  Rate:
+    # 在 GlobalTime 之内允许请求不超过 GlobalCount 次
+    GlobalCount: 20
+    # 单位为秒
+    GlobalTime: 1
+    LoginCount: 1
+    LoginTime: 1
+    RegisterCount: 1
+    RegisterTime: 60
+    ExecuteCodeCount: 1
+    ExecuteCodeTime: 10
+    ProgramExecuteCodeCount: 1
+    ProgramExecuteCodeTime: 2
 SandboxMachine:
   Host: 192.168.254.148
   Port: 2375

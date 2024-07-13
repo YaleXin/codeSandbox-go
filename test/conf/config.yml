@@ -4,7 +4,13 @@ Server:
   Host: localhost
   Port: 8080
   # Jwt加密秘钥
-  JwtKey:
+  JwtKey: xxxxx
+  # Jwt 过期时间，单位为 minutes
+  JwtExpireTime: 10
+  # 图片验证码过期时间，单位为 minutes
+  CaptchaExpireTime: 10
+  # 图片验证码 MD5 哈希前缀
+  CaptchaKey: yyyy
   Database:
     Type: mysql
     Host: localhost
@@ -48,11 +54,30 @@ Server:
       To:
       Host: smtp.qq.com
       Port: 25
+  Rate:
+    # 在 GlobalTime 之内允许请求不超过 GlobalCount 次
+    GlobalCount: 20
+    # 单位为秒
+    GlobalTime: 1
+    LoginCount: 1
+    LoginTime: 1
+    RegisterCount: 1
+    RegisterTime: 60
+    ExecuteCodeCount: 1
+    ExecuteCodeTime: 10
+    ProgramExecuteCodeCount: 1
+    ProgramExecuteCodeTime: 2
 SandboxMachine:
   Host: 192.168.254.148
   Port: 2375
 DockerInfoList:
-  - Language: Java
+  - Language: Go-1.17
+    ImageName: golang:1.17
+    ContainerCount: 3
+    Filename: Main.go
+    CompileCmd: "go build Main.go"
+    RunCmd: "./Main"
+  - Language: Java-8
     ImageName: openjdk:8-alpine
     ContainerCount: 2
     Filename: Main.java
@@ -64,15 +89,9 @@ DockerInfoList:
     Filename: Main.c
     CompileCmd: "gcc Main.c -o Main"
     RunCmd: "./Main"
-  - Language: Python
+  - Language: Python-3.9
     ImageName: python:3.9
     ContainerCount: 2
     Filename: Main.py
     CompileCmd: "echo python"
     RunCmd: "python Main.py"
-  - Language: Go
-    ImageName: golang:1.17
-    ContainerCount: 3
-    Filename: Main.go
-    CompileCmd: "go build Main.go"
-    RunCmd: "./Main"

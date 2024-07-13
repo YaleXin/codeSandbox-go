@@ -59,6 +59,7 @@ type Server struct {
 	Database          Database `yaml:"Database"`
 	Oss               Oss      `yaml:"Oss"`
 	Push              Push     `yaml:"Push,omitempty"`
+	Rate              Rate     `yaml:"Rate"`
 }
 type Database struct {
 	Type     string `yaml:"Type"`
@@ -106,4 +107,18 @@ type Email struct {
 	From     string `yaml:"From,omitempty"`
 	Host     string `yaml:"Host,omitempty"`
 	Port     string `yaml:"Port,omitempty"`
+}
+
+// 请求速率配置（防抖）
+type Rate struct {
+	GlobalCount             int64 `yaml:"GlobalCount"` // 在 GlobalTime 之内允许请求不超过 GlobalCount 次
+	GlobalTime              int64 `yaml:"GlobalTime"`  // 单位为秒
+	LoginCount              int64 `yaml:"LoginCount"`
+	LoginTime               int64 `yaml:"LoginTime"`
+	RegisterCount           int64 `yaml:"RegisterCount"`
+	RegisterTime            int64 `yaml:"RegisterTime"`
+	ExecuteCodeCount        int64 `yaml:"ExecuteCodeCount"`
+	ExecuteCodeTime         int64 `yaml:"ExecuteCodeTime"`
+	ProgramExecuteCodeCount int64 `yaml:"ProgramExecuteCodeCount"`
+	ProgramExecuteCodeTime  int64 `yaml:"ProgramExecuteCodeTime"`
 }

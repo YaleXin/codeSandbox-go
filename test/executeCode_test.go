@@ -118,7 +118,7 @@ func execode(code string, inputList []string) []dto.ExecuteMessage {
 	}
 	sandbox := sandboxDockerServices.SandBox{
 		DockerInfo: utils.DockerInfo{
-			Language:       "Go",
+			Language:       "Go-1.17",
 			ImageName:      "golang:1.17",
 			Filename:       "Main.go",
 			CompileCmd:     "go build Main.go",
@@ -143,7 +143,7 @@ func TestProgramExecuteCode(t *testing.T) {
 	inputList := []string{"1 11\n", "2 3\n", "2 8 \n"}
 	codeRequest := dto.ExecuteCodeRequest{
 		Code:      code,
-		Language:  "Go",
+		Language:  "Go-1.17",
 		InputList: inputList,
 	}
 	origidata, err := json.Marshal(codeRequest)
@@ -151,7 +151,7 @@ func TestProgramExecuteCode(t *testing.T) {
 		t.Fatalf("json.Marshal %v", err)
 	}
 	// 获取密钥对
-	publicKeyBase64 := "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUE2M0UydVFUVVhFZTYzQXV1bEpPRQpOeFlJU0QvcElpamswWk9QTDRSWUFjMWhBRTlQelR0blBHUWJzMFRNZk1BRWI1WFM0bUNXYlgveHJyQVo1dlc4CnBieEorNXNMTFJjOEY0aXh0QUlOY2pxYTI2Mkh2R2JQOFNCbzFwdW54NWt3Z3M5b0tLN3M4R1h1ejZhT01STXEKSEJaYXhwVGtsdEo5c2NyTTlQUFhVSUFScEVpZHBqNDBiRU0rcE1nTGNQSDA5U1F6VE1WbjZ0RG9Fd05WRDNydwo0WWtJNWxYK2YwZi9WMFNVT3NrbUFvbk1aMGtnUVpuNDIwNWt6SFBvSXpGSEFTbmNhbG1vcGNRVk9NWnp1ZWZlCnh0ZGlrbmtlb1ZpUXZ0TVlsM0N0VXhibEMxUnJGQk1qZ243WVliUStSVjhKb01IOG8zQ2IrdTNCRU1IeXNWdE4KTFFJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+	publicKeyBase64 := "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF6SkV6d0ZHMktkdTVzT2xFUzgxUQpKeXlaSkVoNklNQlVOdGoxaFEvSUttOG1NSldqMTNWM1RVS0VHbDZTNjNNbC9FdFNPRDJxKzczSlg1WlVBem1DCjNPK3ZDSWZaVi84WnFtditMR0lTRk54WVJtS0hqTjBWVzA5cS9xd05DM05hMC81TVlHQVg0aDVuUGYvcVFxcEwKUjRTNVYrMEczY1VrRnVhYllGS3N0ZnJ3ODMxV3FrWk4rdFNqS1FORVhNblp2elhWTGcrVy9kdGNZYmtTYjNhTQppZXdlODdoZkRJMktsTDBwdjJqK0RBNE4wVWhTaUdHUlVLaEs5ZWRtNGw0S3ZnUWlYRUFLOGp1N1l1RDdpYnBaCmZZTHVobkFOZmtqclM1WEV5U1dIekFRRjVUS3IwZnhUMFVYWndRV3k0ZDlNU1lmQXlmTTZqWkJSYXd6MHNKSVUKc1FJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
 	keypairServiceInstance := &keypairService.KeyPairServiceInstance
 	_, keyPair := keypairServiceInstance.GetKeyPairByPublicKey(publicKeyBase64)
 
