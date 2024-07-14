@@ -210,7 +210,16 @@ Loop:
 
 	message.TimeCost = tc.Milliseconds()
 	message.MemoryCost = <-memUsageChannel
-	message.ExitCode = exitCode
+	// 由于不同的编程语言执行后，出错时的退出码不尽相同
+	// 但是如果是正常退出，退出码为 0
+	// 如果是因为 timeout 命令超时退出，则退出码为 utils.EXIT_CODE_TIME_OUT
+	// 因此只认三种，即 0 utils.EXIT_CODE_TIME_OUT utils.EXIT_CODE_RUNTIME_ERROR
+	if exitCode != utils.EXIT_CODE_OK && exitCode != utils.EXIT_CODE_TIME_OUT {
+		message.ExitCode = utils.EXIT_CODE_RUNTIME_ERROR
+	} else {
+		message.ExitCode = exitCode
+	}
+
 	close(memUsageChannel)
 	close(shouldStopMoniChannel)
 	close(moniReadyChannel)
