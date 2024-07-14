@@ -13,6 +13,9 @@ func AdminGroup(r *gin.Engine) {
 	admin.Use(middleware.JwtToken(true, global.ADMIN_USER_ROLE))
 
 	{
+		// 获取执行记录列表
 		admin.POST("/execution", api_v1.AdminPageExecution)
+		// 获取用户列表
+		admin.POST("/user", api_v1.AdminPageUser)
 	}
 }

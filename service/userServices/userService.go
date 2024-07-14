@@ -175,6 +175,8 @@ func getUserDetailVO(user *model.User, userVO *vo.UserDetailVO) {
 	userVO.CurrentUsage = user.CurrentUsage
 	userVO.MonthLimit = user.MonthLimit
 	userVO.CreateAt = user.CreatedAt
+	userVO.Ban = user.Ban
+	userVO.Audit = user.Audit
 }
 
 func (userService *UserService) UserLogout(user model.User) bool {

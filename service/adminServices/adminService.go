@@ -15,6 +15,7 @@ type AdminService struct {
 var AdminServiceInstance AdminService
 
 var executionDao db.ExecutionDao
+var userDao db.UserDao
 
 func (a *AdminService) PageExecution(page *dto.PageExecutionRequest) (int, *vo.PageDataVO) {
 	// 每页大小应该是正整数，避免除零错误
@@ -78,4 +79,50 @@ func (a *AdminService) RejectUserByUserId(userId uint) int {
 
 func (a *AdminService) BanUserByUserId(userId uint) int {
 	return global.SUCCESS
+}
+
+func (a *AdminService) PageUser(page *dto.PageExecutionRequest) (int, *vo.PageDataVO) {
+	// 每页大小应该是正整数，避免除零错误
+	if page.PageSize == 0 {
+		return global.PARAMS_ERROR, nil
+	}
+	users, total, err := userDao.PageUser(page.PageSize, page.PageNum)
+	if err != nil {
+		return global.SYSTEM_ERROR, nil
+	}
+	// 封装页码和执行记录
+	dataVO := vo.PageDataVO{
+		Data:  getUserListVO(users),
+		Total: total,
+	}
+	// 总的页数，整除后向上取整
+	if total%page.PageSize != 0 {
+		dataVO.PageCount = total/page.PageSize + 1
+	} else {
+		dataVO.PageCount = total / page.PageSize
+	}
+	return global.SUCCESS, &dataVO
+}
+
+func getUserListVO(users []model.User) []vo.UserDetailVO {
+	userVOS := make([]vo.UserDetailVO, 0, len(users))
+	// 每个都要封装
+	for _, user := range users {
+		detailVO := vo.UserDetailVO{}
+		getUserDetailVO(&user, &detailVO)
+		userVOS = append(userVOS, detailVO)
+	}
+	return userVOS
+}
+
+func getUserDetailVO(user *model.User, userVO *vo.UserDetailVO) {
+	userVO.Id = user.ID
+	userVO.Username = user.Username
+	userVO.Role = user.Role
+	userVO.Email = user.Email
+	userVO.CurrentUsage = user.CurrentUsage
+	userVO.MonthLimit = user.MonthLimit
+	userVO.CreateAt = user.CreatedAt
+	userVO.Ban = user.Ban
+	userVO.Audit = user.Audit
 }

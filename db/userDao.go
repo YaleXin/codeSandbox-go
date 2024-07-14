@@ -66,3 +66,19 @@ func (u *UserDao) DeleteUserById(id uint) error {
 	}
 	return nil
 }
+
+func (u *UserDao) PageUser(pageSize, pageNumber int64) ([]model.User, int64, error) {
+	var users []model.User
+	var count int64
+	result := dBClinet.Find(&users).Count(&count)
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	// 跳过的记录数
+	offset := (pageNumber - 1) * pageSize
+	result = dBClinet.Offset(int(offset)).Limit(int(pageSize)).Find(&users)
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	return users, count, nil
+}

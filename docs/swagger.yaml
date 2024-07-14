@@ -207,6 +207,12 @@ definitions:
     type: object
   vo.UserDetailVO:
     properties:
+      audit:
+        description: 是否审核通过
+        type: boolean
+      ban:
+        description: 是否被禁用
+        type: boolean
       createAt:
         description: 注册时间
         type: string
@@ -295,6 +301,53 @@ paths:
           schema:
             $ref: '#/definitions/responses.Response'
       summary: 获取用户的代码执行记录
+      tags:
+      - Admin
+  /api/v1/admin/user:
+    post:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      parameters:
+      - description: 登录凭证，登录成功后会返回该凭证
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 分页信息
+        in: body
+        name: pageExecutionRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PageExecutionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/vo.PageDataVO'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/vo.UserDetailVO'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 获取用户列表
       tags:
       - Admin
   /api/v1/captcha:

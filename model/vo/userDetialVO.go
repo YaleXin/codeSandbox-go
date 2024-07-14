@@ -10,4 +10,6 @@ type UserDetailVO struct {
 	MonthLimit   int       `json:"monthLimit"`   // 每月限额
 	CurrentUsage int       `json:"currentUsage"` // 每月已用额度
 	CreateAt     time.Time `json:"createAt"`     //注册时间
+	Ban          bool      `json:"ban"`          // 是否被禁用
+	Audit        bool      `json:"audit"`        // 是否审核通过
 }
