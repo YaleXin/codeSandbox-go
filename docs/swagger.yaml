@@ -78,6 +78,49 @@ definitions:
         description: 错误描述
         type: string
     type: object
+  vo.AdminExecutionVO:
+    properties:
+      code:
+        description: 代码
+        type: string
+      createAt:
+        description: 代码执行时间戳
+        type: string
+      id:
+        description: id
+        type: integer
+      inputList:
+        description: 所有的输入用例
+        items:
+          type: string
+        type: array
+      keyPairId:
+        description: 使用的密钥对ID
+        type: integer
+      language:
+        description: 编程语言
+        type: string
+      maxMemoryCost:
+        description: 单个输入用例的最大内存消耗
+        type: integer
+      maxTimeCost:
+        description: 单个输入用例的最大时间消耗
+        type: integer
+      outputList:
+        description: 所有的输入用例
+        items:
+          type: string
+        type: array
+      status:
+        description: 执行状态
+        type: integer
+      userId:
+        description: 执行该代码的用户id
+        type: integer
+      username:
+        description: 执行该代码的用户名字
+        type: string
+    type: object
   vo.CaptchaVO:
     properties:
       imageBase64:
@@ -187,12 +230,16 @@ definitions:
     type: object
   vo.UserVO:
     properties:
+      audit:
+        description: 是否已通过审核
+        type: boolean
       id:
         type: integer
       role:
         description: '权限 1:管理员 10: 普通用户'
         type: integer
       token:
+        description: 登陆凭证
         type: string
       username:
         description: 用户名
@@ -201,6 +248,55 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/admin/execution:
+    post:
+      consumes:
+      - application/json
+      description: 获取用户的代码执行记录
+      parameters:
+      - description: 登录凭证，登录成功后会返回该凭证
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 分页信息
+        in: body
+        name: pageExecutionRequest
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PageExecutionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  items:
+                    allOf:
+                    - $ref: '#/definitions/vo.PageDataVO'
+                    - properties:
+                        data:
+                          items:
+                            $ref: '#/definitions/vo.AdminExecutionVO'
+                          type: array
+                      type: object
+                  type: array
+              type: object
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 获取用户的代码执行记录
+      tags:
+      - Admin
   /api/v1/captcha:
     get:
       consumes:

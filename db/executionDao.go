@@ -47,6 +47,24 @@ func (e *ExecutionDao) PageExecutionByUserId(userId uint, pageSize, pageNumber i
 	return executions, count, nil
 }
 
+func (e *ExecutionDao) PageExecution(pageSize, pageNumber int64) ([]model.Execution, int64, error) {
+	var executions []model.Execution
+
+	var count int64
+	result := dBClinet.Find(&executions).Count(&count)
+	if result.Error != nil {
+		return nil, 0, result.Error // 返回查询过程中可能遇到的错误
+	}
+	// 跳过的记录数
+	offset := (pageNumber - 1) * pageSize
+	// 顺便把 User 信息也查出来
+	result = dBClinet.Preload("User").Offset(int(offset)).Limit(int(pageSize)).Find(&executions)
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	return executions, count, nil
+}
+
 func (e *ExecutionDao) ExecutionAdd(execution *model.Execution) (int64, error) {
 	create := dBClinet.Create(execution)
 	err := create.Error

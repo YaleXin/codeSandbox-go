@@ -49,7 +49,7 @@ func CheckToken(token string) (*MyClaims, int) {
 		return JWT_KEY, nil
 	})
 	if err != nil {
-		return nil, global.SYSTEM_ERROR
+		return nil, global.TOKEN_WRONG_ERROR
 	}
 	if key, ok := setToken.Claims.(*MyClaims); ok && setToken.Valid {
 		// 如果 id 为 0 ，则是错的，因为我们返回的必然是一个正确的
@@ -58,7 +58,7 @@ func CheckToken(token string) (*MyClaims, int) {
 		}
 		return key, global.SUCCESS
 	} else {
-		return nil, global.SYSTEM_ERROR
+		return nil, global.TOKEN_WRONG_ERROR
 	}
 }
 

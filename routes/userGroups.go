@@ -18,6 +18,7 @@ func UserGroup(r *gin.Engine) {
 	}
 
 	needLogin := r.Group("api/v1")
+	// 必须要登录，且至少是普通用户的权限
 	needLogin.Use(middleware.JwtToken(true, global.NORMAL_USER_ROLE))
 	{
 		// 密钥对列表

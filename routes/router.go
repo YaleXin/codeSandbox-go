@@ -48,6 +48,8 @@ func Starter() {
 
 	r.Use(middleware.GlobalRateMiddleware()) // 速率限制
 	r.Use(middleware.Cors())                 // 跨域处理
+	// 管理员路由注册
+	AdminGroup(r)
 	// 沙箱路由注册
 	SandboxGroup(r)
 	// 用户相关路由注册

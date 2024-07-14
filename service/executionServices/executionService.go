@@ -62,6 +62,10 @@ func (e *ExecutionService) PageUserExecution(user *model.User, page *dto.PageExe
 	if page.PageSize == 0 {
 		return global.PARAMS_ERROR, nil
 	}
+	// 不能超过预设页大小
+	if page.PageSize > global.EXECUTION_PAGE_MAX_SIZE {
+		return global.PARAMS_ERROR, nil
+	}
 	executionListByUserId, total, err := executionDao.PageExecutionByUserId(user.ID, page.PageSize, page.PageNum)
 	if err != nil {
 		return global.SYSTEM_ERROR, nil
