@@ -58,7 +58,7 @@ type Server struct {
 	CaptchaExpireTime int      `yaml:"CaptchaExpireTime"`
 	Database          Database `yaml:"Database"`
 	Oss               Oss      `yaml:"Oss"`
-	Push              Push     `yaml:"Push,omitempty"`
+	Email             Email    `yaml:"Email"`
 	Rate              Rate     `yaml:"Rate"`
 }
 type Database struct {
@@ -91,22 +91,13 @@ type Oss struct {
 		BucketName      string `yaml:"BucketName,omitempty"`
 	} `yaml:"aliyun"`
 }
-type Push struct {
-	Enable string `yaml:"Enable,omitempty"`
-	WxPush WxPush `yaml:"WxPush,omitempty"`
-	Email  Email  `yaml:"Email,omitempty"`
-}
-type WxPush struct {
-	CorpId  string `yaml:"CorpId,omitempty"`
-	Agentid string `yaml:"Agentid,omitempty"`
-	Secret  string `yaml:"Secret,omitempty"`
-}
+
 type Email struct {
-	To       string `yaml:"To,omitempty"`
-	Password string `yaml:"Password,omitempty"`
 	From     string `yaml:"From,omitempty"`
+	Password string `yaml:"Password,omitempty"`
+	To       string `yaml:"To,omitempty"`
 	Host     string `yaml:"Host,omitempty"`
-	Port     string `yaml:"Port,omitempty"`
+	Port     int    `yaml:"Port,omitempty"`
 }
 
 // 请求速率配置（防抖）

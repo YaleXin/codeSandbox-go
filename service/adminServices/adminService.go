@@ -5,8 +5,10 @@ import (
 	"codeSandbox/model"
 	"codeSandbox/model/dto"
 	"codeSandbox/model/vo"
+	"codeSandbox/service/mailServices"
 	"codeSandbox/utils/global"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -80,6 +82,15 @@ func (a *AdminService) AuditUserByUserId(userId uint) int {
 	_, err := userDao.UpdateUserById(&user)
 	if err != nil {
 		return global.SYSTEM_ERROR
+	}
+	// 发送邮件通知用户
+	_, err = userDao.GetUserById(&user, userId)
+	if err != nil {
+		log.Warnf("After AuditUserByUserId query user fail:%v", err)
+	} else {
+		mailServiceInstance := &mailServices.MailServiceInstance
+		// 使用协程，避免阻塞
+		go mailServiceInstance.SendToUser(&user)
 	}
 	return global.SUCCESS
 }

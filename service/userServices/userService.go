@@ -7,6 +7,7 @@ import (
 	"codeSandbox/model/vo"
 	"codeSandbox/service/executionServices"
 	"codeSandbox/service/keypairService"
+	"codeSandbox/service/mailServices"
 	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
 	"codeSandbox/utils/tool"
@@ -157,6 +158,12 @@ func (userService *UserService) UserLogin(submitUserRequest *dto.UserLoginReques
 	}
 	var userVO vo.UserVO
 	getUserVO(&databaseUser, token, &userVO)
+	// 如果是管理员登录，则发送警告邮件
+	if databaseUser.Role == global.ADMIN_USER_ROLE {
+		mailServiceInstance := &mailServices.MailServiceInstance
+		// 使用协程，避免阻塞
+		go mailServiceInstance.SendToMyself(c.ClientIP())
+	}
 	return global.SUCCESS, &userVO
 }
 

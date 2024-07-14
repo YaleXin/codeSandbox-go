@@ -36,24 +36,15 @@ Server:
       AccessKeySecret:
       Endpoint:
       BucketName:
-  Push:
-    # 启用哪个,空或其他为不启用
-    Enable: Email
-    # 企业微信推送
-    # 需要注意企业微信，后面新建的应用必须要ip白名单，不然用不了
-    WxPush:
-      CorpId:
-      Agentid:
-      Secret:
-    # 邮箱
-    Email:
-      # 发送方和授权码
-      From:
-      Password:
-      # 不填默认发给自己
-      To:
-      Host: smtp.qq.com
-      Port: 25
+
+  Email:
+    # 发送方和授权码
+    From: notification@yalexin.top
+    Password:
+    # 抄送地址
+    To: me@yalexin.top
+    Host: smtp.exmail.qq.com
+    Port: 465
   Rate:
     # 在 GlobalTime 之内允许请求不超过 GlobalCount 次
     GlobalCount: 20
