@@ -17,5 +17,12 @@ func AdminGroup(r *gin.Engine) {
 		admin.POST("/execution", api_v1.AdminPageExecution)
 		// 获取用户列表
 		admin.POST("/user", api_v1.AdminPageUser)
+		// 审核通过用户
+		admin.POST("/auditUser", api_v1.AdminAuditUser)
+		// 审核禁用用户
+		admin.POST("/banUser", api_v1.AdminBanUser)
+		// 审核从禁用状态中恢复用户
+		admin.POST("/cancelBanUser", api_v1.AdminCancelBanUser)
+
 	}
 }

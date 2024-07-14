@@ -7,6 +7,7 @@ import (
 	"codeSandbox/model/vo"
 	"codeSandbox/utils/global"
 	"encoding/json"
+	"gorm.io/gorm"
 )
 
 type AdminService struct {
@@ -70,6 +71,16 @@ func getExecutionVO(e *model.Execution) *vo.AdminExecutionVO {
 	return &executionVO
 }
 func (a *AdminService) AuditUserByUserId(userId uint) int {
+	user := model.User{
+		Model: gorm.Model{
+			ID: userId,
+		},
+		Audit: true,
+	}
+	_, err := userDao.UpdateUserById(&user)
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
 	return global.SUCCESS
 }
 
@@ -78,6 +89,30 @@ func (a *AdminService) RejectUserByUserId(userId uint) int {
 }
 
 func (a *AdminService) BanUserByUserId(userId uint) int {
+	user := model.User{
+		Model: gorm.Model{
+			ID: userId,
+		},
+		Ban: true,
+	}
+	_, err := userDao.UpdateUserById(&user)
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
+	return global.SUCCESS
+}
+
+func (a *AdminService) CancelUserByUserId(userId uint) int {
+	user := model.User{
+		Model: gorm.Model{
+			ID: userId,
+		},
+		Ban: false,
+	}
+	_, err := userDao.UpdateUserBanById(&user)
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
 	return global.SUCCESS
 }
 

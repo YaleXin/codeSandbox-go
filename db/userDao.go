@@ -58,6 +58,15 @@ func (u *UserDao) UpdateUserById(user *model.User) (*model.User, error) {
 	}
 	return user, nil
 }
+func (u *UserDao) UpdateUserBanById(user *model.User) (*model.User, error) {
+	update := dBClinet.Model(user).Update("ban", user.Ban)
+	err := update.Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (u *UserDao) DeleteUserById(id uint) error {
 	tx := dBClinet.Delete(&model.User{}, id)
 	err := tx.Error
