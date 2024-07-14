@@ -90,14 +90,17 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	}
 	// 先添加一条执行记录到数据库中
 	var execution model.Execution
+	// addExecutionRecord 会判断该用户是否可以执行代码（例如调用额度是否还有）
 	code := addExecutionRecord(c, &executeCodeRequest, &execution, keyPair)
 	if code != global.SUCCESS {
 		return code, nil
 	}
 	// 获取每个执行用例的输出
 	executeMessages := box.ExecuteCode(&executeCodeRequest)
-	// 更新数据库中的执行记录
-	updateExecutionRecord(&execution, executeMessages)
+	go func() {
+		// 更新数据库中的执行记录
+		updateExecutionRecord(&execution, executeMessages)
+	}()
 	// 对执行用例脱敏
 	executeCodeResponse := dto.ExecuteCodeResponse{}
 	executeCodeResponse.ExecuteMessages = make([]vo.ExecuteMessageVO, 0, 0)

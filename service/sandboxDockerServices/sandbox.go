@@ -79,19 +79,16 @@ func copyFileToContainer(containerId, userCodeFilePath, uuid string) bool {
 
 	// 规定该新目录只能给该用户读写（root除外）
 	newUserName := strings.Replace(uuid, "-", "", -1)
-	message = runCmdByContainer(containerId, []string{"useradd", newUserName, "-m"}, "", "", "useradd", "")
+	// 一次性执行多个命令
+	// 使用该 uuid 创建一个用户，然后将新建的文件夹归属权给予该用户，并设置只有该用户能够访问该文件夹
+	cmd1 := " useradd " + newUserName + " -m "
+	cmd2 := " chown -R" + fmt.Sprintf(" %v:%v ", newUserName, newUserName) + uuid
+	cmd3 := " chmod -R 700 " + uuid
+	totalCmd := cmd1 + " && " + cmd2 + " && " + cmd3
+	cmds := []string{"/bin/sh", "-c", totalCmd}
+	message = runCmdByContainer(containerId, cmds, "", "", "useradd", "")
 	if message.ExitCode != utilsType.EXIT_CODE_OK {
-		return false
-	}
-	// 更改新建的目录归属权为新建的用户
-	cmds := []string{"chown", "-R", fmt.Sprintf("%v:%v", newUserName, newUserName), uuid}
-	message = runCmdByContainer(containerId, cmds, "", "", "chown", "")
-	if message.ExitCode != utilsType.EXIT_CODE_OK {
-		return false
-	}
-	cmds = []string{"chmod", "-R", "700", uuid}
-	message = runCmdByContainer(containerId, cmds, "", "", "chmod", "")
-	if message.ExitCode != utilsType.EXIT_CODE_OK {
+		log.Errorf("run: %v fail", cmds)
 		return false
 	}
 	return true
@@ -120,13 +117,17 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 		}}
 	}
 	// 对容器中刚刚创建的目录和用户执行删除操作
-	defer clearContainerFileAndUser(containerId, uuid)
+	defer func() {
+		// 使用协程去清理，而不是等待阻塞完成
+		go clearContainerFileAndUser(containerId, uuid)
+	}()
 
 	//====== 编译文件
 	compileCmd := dockerInfo.CompileCmd
 	cmdSplit := strings.Split(compileCmd, " ")
 	// Linux系统下，路径分隔符必然为 /
 	workDir := WORDING_DIR + "/" + uuid
+	// 使用新创建的用户去编译代码，而不是直接使用 root
 	compileRes := runCmdByContainer(containerId, cmdSplit, workDir, "", "compile", newUserName)
 	log.Infof("compileRes:%v", compileRes)
 	if compileRes.ExitCode != utilsType.EXIT_CODE_OK {
@@ -136,6 +137,7 @@ func (sandbox *SandBox) compileAndRun(language string, userCodeFilePath string, 
 	}
 
 	//====== 运行代码
+	// 同理，使用新创建的用户去执行代码，而不是直接使用 root
 	messages := runCode(containerId, dockerInfo, inputList, workDir, newUserName)
 
 	return messages
@@ -224,7 +226,10 @@ func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) 
 	code := executeCodeRequest.Code
 	_, codeFilePath := sandbox.saveFile(code)
 	// 4. 文件清理
-	defer clearFile(codeFilePath)
+	defer func() {
+		// 使用协程，避免用户阻塞等待
+		go clearFile(codeFilePath)
+	}()
 	// 2. 编译代码并执行代码
 	language := executeCodeRequest.Language
 	inputList := executeCodeRequest.InputList
