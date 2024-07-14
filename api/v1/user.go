@@ -157,7 +157,7 @@ func KeyList(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录凭证，登录成功后会返回该凭证"
-// @Success 200 {object} responses.Response{data=[]vo.UserDetailVO} "成功响应"
+// @Success 200 {object} responses.Response{data=vo.UserDetailVO} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/user/info [get]
@@ -212,7 +212,7 @@ func ChangePassword(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "登录凭证，登录成功后会返回该凭证"
 // @Param pageExecutionRequest body dto.PageExecutionRequest true "分页信息"
-// @Success 200 {object} responses.Response{data=[]vo.PageDataVO{data=[]vo.ExecutionVO}} "成功响应"
+// @Success 200 {object} responses.Response{data=vo.PageDataVO{data=[]vo.ExecutionVO}} "成功响应"
 // @Failure 400 {object} responses.Response "错误响应"
 // @Failure 500 {object} responses.Response "系统内部错误"
 // @Router /api/v1/user/execution [post]

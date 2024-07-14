@@ -287,12 +287,7 @@ paths:
             - $ref: '#/definitions/responses.Response'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/vo.PageDataVO'
-                  - properties:
-                      data:
-                        type: boolean
-                    type: object
+                  type: boolean
               type: object
         "400":
           description: 错误响应
@@ -332,12 +327,7 @@ paths:
             - $ref: '#/definitions/responses.Response'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/vo.PageDataVO'
-                  - properties:
-                      data:
-                        type: boolean
-                    type: object
+                  type: boolean
               type: object
         "400":
           description: 错误响应
@@ -377,12 +367,7 @@ paths:
             - $ref: '#/definitions/responses.Response'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/vo.PageDataVO'
-                  - properties:
-                      data:
-                        type: boolean
-                    type: object
+                  type: boolean
               type: object
         "400":
           description: 错误响应
@@ -422,16 +407,14 @@ paths:
             - $ref: '#/definitions/responses.Response'
             - properties:
                 data:
-                  items:
-                    allOf:
-                    - $ref: '#/definitions/vo.PageDataVO'
-                    - properties:
-                        data:
-                          items:
-                            $ref: '#/definitions/vo.AdminExecutionVO'
-                          type: array
-                      type: object
-                  type: array
+                  allOf:
+                  - $ref: '#/definitions/vo.PageDataVO'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/vo.AdminExecutionVO'
+                        type: array
+                    type: object
               type: object
         "400":
           description: 错误响应
@@ -703,16 +686,14 @@ paths:
             - $ref: '#/definitions/responses.Response'
             - properties:
                 data:
-                  items:
-                    allOf:
-                    - $ref: '#/definitions/vo.PageDataVO'
-                    - properties:
-                        data:
-                          items:
-                            $ref: '#/definitions/vo.ExecutionVO'
-                          type: array
-                      type: object
-                  type: array
+                  allOf:
+                  - $ref: '#/definitions/vo.PageDataVO'
+                  - properties:
+                      data:
+                        items:
+                          $ref: '#/definitions/vo.ExecutionVO'
+                        type: array
+                    type: object
               type: object
         "400":
           description: 错误响应
@@ -746,9 +727,7 @@ paths:
             - $ref: '#/definitions/responses.Response'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/vo.UserDetailVO'
-                  type: array
+                  $ref: '#/definitions/vo.UserDetailVO'
               type: object
         "400":
           description: 错误响应

@@ -58,19 +58,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "allOf": [
-                                                {
-                                                    "$ref": "#/definitions/vo.PageDataVO"
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "data": {
-                                                            "type": "boolean"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "type": "boolean"
                                         }
                                     }
                                 }
@@ -135,19 +123,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "allOf": [
-                                                {
-                                                    "$ref": "#/definitions/vo.PageDataVO"
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "data": {
-                                                            "type": "boolean"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "type": "boolean"
                                         }
                                     }
                                 }
@@ -212,19 +188,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "allOf": [
-                                                {
-                                                    "$ref": "#/definitions/vo.PageDataVO"
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "data": {
-                                                            "type": "boolean"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "type": "boolean"
                                         }
                                     }
                                 }
@@ -289,25 +253,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "allOf": [
-                                                    {
-                                                        "$ref": "#/definitions/vo.PageDataVO"
-                                                    },
-                                                    {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "data": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "$ref": "#/definitions/vo.AdminExecutionVO"
-                                                                }
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/vo.PageDataVO"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/vo.AdminExecutionVO"
                                                             }
                                                         }
                                                     }
-                                                ]
-                                            }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -759,25 +720,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "allOf": [
-                                                    {
-                                                        "$ref": "#/definitions/vo.PageDataVO"
-                                                    },
-                                                    {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "data": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "$ref": "#/definitions/vo.ExecutionVO"
-                                                                }
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/vo.PageDataVO"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/vo.ExecutionVO"
                                                             }
                                                         }
                                                     }
-                                                ]
-                                            }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -833,10 +791,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/vo.UserDetailVO"
-                                            }
+                                            "$ref": "#/definitions/vo.UserDetailVO"
                                         }
                                     }
                                 }
