@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"codeSandbox/model/dto"
 	"codeSandbox/utils"
+	"codeSandbox/utils/global"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -239,7 +240,14 @@ func createContainer(dockerInfo *utils.DockerInfo, containerName string) string 
 		NetworkDisabled: true,
 		WorkingDir:      WORDING_DIR,
 	}
-	resp, err := DockerClient.ContainerCreate(ctx, &containerConfig, nil, nil, nil, containerName)
+	hostConfig := container.HostConfig{
+		Resources: container.Resources{
+			Memory:     global.CONTAINER_MAX_MEMORY, // 限制内存 1
+			MemorySwap: global.CONTAINER_MAX_MEMORY, // 限制内存 1
+			CPUCount:   global.CONTAINER_MAX_CPU,    // 限制CPU
+		},
+	}
+	resp, err := DockerClient.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, nil, containerName)
 	var containerId string
 	// 判断容器名字是否被占用，被占用则直接启动
 	if err != nil {
@@ -356,9 +364,16 @@ func init() {
 func connectDocker() (cli *client.Client, err error) {
 	dockerConfig := utils.Config.SandboxMachine
 	// TODO 部署时，换用另一种方式初始化
-	cli, err = client.NewClientWithOpts(client.WithAPIVersionNegotiation(), client.WithHost(fmt.Sprintf("tcp://%v:%v", dockerConfig.Host, dockerConfig.Port)))
-	if err != nil {
-		return nil, err
+	if utils.Config.Server.AppMode == global.APP_MODE_DEV {
+		cli, err = client.NewClientWithOpts(client.WithAPIVersionNegotiation(), client.WithHost(fmt.Sprintf("tcp://%v:%v", dockerConfig.Host, dockerConfig.Port)))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return cli, nil

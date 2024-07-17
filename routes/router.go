@@ -3,6 +3,7 @@ package routes
 import (
 	"codeSandbox/docs"
 	"codeSandbox/utils"
+	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -29,14 +30,14 @@ func registerSwagger(r gin.IRouter) {
 
 func Starter() {
 	log.Info("init router...")
-	if utils.Config.Server.AppMode == "prod" {
+	if utils.Config.Server.AppMode == global.APP_MODE_PROD {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
 		gin.SetMode(gin.DebugMode)
 	}
 	r := gin.New()
 	// 生产环境中必须要关闭 API 文档
-	if utils.Config.Server.AppMode != "prod" {
+	if utils.Config.Server.AppMode != global.APP_MODE_PROD {
 		// 注册 swagger
 		registerSwagger(r)
 	}

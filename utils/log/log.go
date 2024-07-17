@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"codeSandbox/utils"
+	"codeSandbox/utils/global"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
@@ -78,7 +79,7 @@ func ConfigLog() {
 	logrus.SetFormatter(&MyFormatter{})
 	// 按天分割
 	var logFileName string
-	if appMode == "dev" {
+	if appMode == global.APP_MODE_DEV {
 		logFileName = path.Join("log", "codeSandbox") + ".%Y%m%d_dev.log"
 		logrus.SetLevel(logrus.DebugLevel)
 	} else {
