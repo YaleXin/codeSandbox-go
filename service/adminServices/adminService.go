@@ -72,27 +72,23 @@ func getExecutionVO(e *model.Execution) *vo.AdminExecutionVO {
 	}
 	return &executionVO
 }
+
 func (a *AdminService) AuditUserByUserId(userId uint) int {
 	user := model.User{
 		Model: gorm.Model{
 			ID: userId,
 		},
-		Audit: true,
 	}
-	_, err := userDao.UpdateUserById(&user)
+	// 先查出用户信息
+	_, err := userDao.GetUserById(&user, userId)
 	if err != nil {
+		log.Warnf("After AuditUserByUserId query user fail:%v", err)
 		return global.SYSTEM_ERROR
 	}
 	// 发送邮件通知用户
-	_, err = userDao.GetUserById(&user, userId)
-	if err != nil {
-		log.Warnf("After AuditUserByUserId query user fail:%v", err)
-	} else {
-		mailServiceInstance := &mailServices.MailServiceInstance
-		// 使用协程，避免阻塞
-		go mailServiceInstance.SendToUser(&user)
-	}
-	return global.SUCCESS
+	mailServiceInstance := &mailServices.MailServiceInstance
+	sendToUserCode := mailServiceInstance.SendToUser(&user)
+	return sendToUserCode
 }
 
 func (a *AdminService) RejectUserByUserId(userId uint) int {

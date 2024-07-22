@@ -235,3 +235,20 @@ func PageExecution(c *gin.Context) {
 		return
 	}
 }
+
+func UserCheckEmail(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusOK, baseRes.ErrByCode(global.TOKEN_NOT_FOUND_ERROR))
+		return
+	}
+	instance := &userServices.UserServiceInstance
+	code := instance.UserCheckEmail(token)
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
+		return
+	} else {
+		c.JSON(http.StatusOK, baseRes.OK.WithMsg("注册成功！即刻起您可以体验我们的功能啦"))
+		return
+	}
+}

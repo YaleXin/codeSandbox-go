@@ -359,7 +359,7 @@ func init() {
 	}
 	DockerClient = docker
 	// TODO 需要用docker时候，将下面开启
-	go initImagesAndContainer()
+	//go initImagesAndContainer()
 }
 func connectDocker() (cli *client.Client, err error) {
 	dockerConfig := utils.Config.SandboxMachine

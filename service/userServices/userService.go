@@ -8,12 +8,16 @@ import (
 	"codeSandbox/service/executionServices"
 	"codeSandbox/service/keypairService"
 	"codeSandbox/service/mailServices"
+	"codeSandbox/utils"
 	"codeSandbox/utils/global"
 	"codeSandbox/utils/middleware"
 	"codeSandbox/utils/tool"
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -249,10 +253,16 @@ func (userService *UserService) UserRegister(userRegisterRequest *dto.UserRegist
 	user.Role = global.NORMAL_USER_ROLE
 	user.Audit = false
 	user.Ban = false
+	user.MonthLimit = global.USER_INIT_MONTH_LIMIT
 	_, err = userDao.UserAdd(&user)
 	if err != nil {
 		return global.SYSTEM_ERROR
 	}
+	go func() {
+		// 使用协程发送邮件，避免阻塞
+		mailServiceInstance := &mailServices.MailServiceInstance
+		mailServiceInstance.SendToMyselfToAuditUser(&user)
+	}()
 	return global.SUCCESS
 }
 func (userService *UserService) GenerateKeyPair(c *gin.Context) (int, *vo.KeyPairVO) {
@@ -332,6 +342,53 @@ func (userService *UserService) ChangePassword(c *gin.Context, changePasswordReq
 	md5Str := encryptPwdWithSalt(changePasswordRequest.NewPassword, databaseUser.Salt)
 	databaseUser.Password = md5Str
 	_, err = userDao.UpdateUserById(databaseUser)
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
+	return global.SUCCESS
+}
+func (userService *UserService) UserCheckEmail(verifyToken string) int {
+	split := strings.Split(verifyToken, ".")
+	if len(split) != 2 {
+		return global.TOKEN_WRONG_ERROR
+	}
+	//KEY = <base64(userid)>.<md5(key+userid)>
+
+	// 先把 用户id 解码出来
+	userIdStr, err := base64.StdEncoding.DecodeString(split[0])
+	if err != nil {
+		return global.TOKEN_WRONG_ERROR
+	}
+	// 判断token的有效性
+	//KEY = <base64(userid)>.<md5(key+userid)>
+	md5Str := tool.MD5Str(utils.Config.Server.RegisterUrlKey + string(userIdStr))
+	if md5Str != split[1] {
+		return global.TOKEN_WRONG_ERROR
+	}
+	userId, err := strconv.Atoi(string(userIdStr))
+	if err != nil {
+		return global.PARAMS_ERROR
+	}
+	user := model.User{
+		Model: gorm.Model{
+			ID: uint(userId),
+		},
+	}
+	_, err = userDao.GetUserById(&user, uint(userId))
+	if err != nil {
+		return global.SYSTEM_ERROR
+	}
+	// 不能重复确认
+	if user.Audit == true {
+		return global.REPEAT_CHECK_ERROR
+	}
+
+	auditedUser := model.User{
+		Model: gorm.Model{ID: user.ID},
+		Audit: true,
+	}
+	// 将用户的审核状态设置为 “已审核”
+	_, err = userDao.UpdateUserById(&auditedUser)
 	if err != nil {
 		return global.SYSTEM_ERROR
 	}

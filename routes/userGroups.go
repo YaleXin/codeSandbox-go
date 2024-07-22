@@ -40,4 +40,9 @@ func UserGroup(r *gin.Engine) {
 		// 获取执行记录
 		needLogin.POST("user/execution", api_v1.PageExecution)
 	}
+	normalGroup := r.Group("api/v1")
+	{
+		// 用户点击邮箱中的 确认注册
+		normalGroup.GET("user/check", api_v1.UserCheckEmail)
+	}
 }

@@ -20,8 +20,12 @@ const (
 	INPUT_LIST_MAX_LEN      = 5   //输入用例最大数目
 	MAINTAIN_KEY_MAX_LEN    = 5   //每个用户最多可以有的 key
 	EXECUTION_PAGE_MAX_SIZE = 100 // 用户查询执行记录每页最大数
+	USER_INIT_MONTH_LIMIT   = 500 // 每个用户初始的每月调用额度
 )
 const (
 	APP_MODE_DEV  = "dev"
 	APP_MODE_PROD = "prod"
+)
+const (
+	REGISTER_URL_PREFIX = "https://code.yalexin.top/api/v1/user/check?token="
 )

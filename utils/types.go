@@ -55,6 +55,7 @@ type Server struct {
 	JwtKey            string   `yaml:"JwtKey"`
 	JwtExpireTime     int      `yaml:"JwtExpireTime"`
 	CaptchaKey        string   `yaml:"CaptchaKey"`
+	RegisterUrlKey    string   `yaml:"RegisterUrlKey"`
 	CaptchaExpireTime int      `yaml:"CaptchaExpireTime"`
 	Database          Database `yaml:"Database"`
 	Oss               Oss      `yaml:"Oss"`
