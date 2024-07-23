@@ -33,6 +33,7 @@ const (
 	KEY_PAIR_ERROR              = 50002 // "密钥错误",
 	CAPTCHA_WRONG_ERROR         = 50003 // "验证码错误",
 	API_REQUEST_ERROR           = 50020 // "外部API调用失败",
+	MAINTAIN_ERROR              = 50100 // "系统维护期，该功能暂不可用",
 )
 
 var codemsg = map[int]string{
@@ -68,6 +69,7 @@ var codemsg = map[int]string{
 	KEY_PAIR_ERROR:              "密钥错误",
 	CAPTCHA_WRONG_ERROR:         "验证码错误",
 	API_REQUEST_ERROR:           "外部API调用失败",
+	MAINTAIN_ERROR:              "系统维护期，该功能暂不可用",
 }
 
 func GetErrMsg(code int) string {

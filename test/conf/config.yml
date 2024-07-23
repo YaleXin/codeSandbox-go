@@ -13,6 +13,13 @@ Server:
   CaptchaKey: yyyy
   # 生成注册链接的key
   RegisterUrlKey: zzz
+  Maintenance:
+    # 维护期开始的时间（凌晨亮点）
+    StartTime: "02:00:00"
+    # 执行维护任务的时间（每天的凌晨 02:30:00 时刻）
+    ExecuteTime: "02:30:00"
+    # 维护期结束的时间（凌晨三点）
+    EndTime: "03:00:00"
   Database:
     Type: mysql
     Host: localhost

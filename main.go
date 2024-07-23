@@ -3,18 +3,26 @@ package main
 import (
 	"codeSandbox/db"
 	"codeSandbox/routes"
-	"codeSandbox/utils/log"
+	"codeSandbox/task"
+	logPackage "codeSandbox/utils/log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-/*
-
-TODO
-1. - [ ] 完善 docker 客户端初始化方式（生产模式不使用tcp）
-*/
-
 func main() {
-	db.InitRedis()
-	log.ConfigLog()
-	routes.Starter()
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
+	db.InitRedis()
+	logPackage.ConfigLog()
+	taskCron := task.InitTask()
+	routes.Starter()
+	select {
+	case <-signalChan:
+		// 接收到信号，优雅地关闭 cron
+		if taskCron != nil {
+			taskCron.Stop()
+		}
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	//api/types/container/options.go
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -303,6 +304,52 @@ func initContainer(dockerInfoList *[]utils.DockerInfo) {
 	wait.Wait()
 	log.Infof("init container success")
 }
+func destroyContainerByName(containName string) bool {
+	// 通过名称获取容器的详细信息
+	containerToRemove, err := DockerClient.ContainerInspect(context.Background(), containName)
+	if err != nil {
+		if err.Error() == "no such id" {
+			log.Errorf("Container with name '%s' not found.\n", containName)
+			return false
+		}
+		log.Errorf("DockerClient.ContainerInspect container %v fail: %v", containName, err)
+	}
+	// 删除容器
+	err = DockerClient.ContainerRemove(context.Background(), containerToRemove.ID, container.RemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	})
+	if err != nil {
+		log.Errorf("DockerClient.ContainerRemove container %v fail: %v", containName, err)
+		return false
+	}
+	return true
+}
+func destroyAllContainer() {
+	list := utils.Config.DockerInfoList
+	languageListLen := len(list)
+	var wait sync.WaitGroup
+	// 每种编程语言使用一个协程来删除容器
+	wait.Add(languageListLen)
+	for _, dockerInfo := range list {
+		log.Debugf("handle %v ...", dockerInfo)
+		go func(info utils.DockerInfo) {
+			log.Debugf("go coroutine get %v", info)
+			// 删除指定数量的容器
+			for i := 0; i < info.ContainerCount; i++ {
+				containerName := getContainerName(info.Language, i)
+				ok := destroyContainerByName(containerName)
+				if !ok {
+					log.Errorf("Delete container fail", containerName)
+				}
+			}
+			wait.Done()
+			log.Debugf("handle %v finish, create %v containers", info, info.ContainerCount)
+		}(dockerInfo)
+	}
+	wait.Wait()
+	log.Infof("destroy container success")
+}
 func initImagesAndContainer() {
 	// 先看本地的镜像列表
 	// 如果配置文件中指定的编程语言对应的镜像不在本地，则下载
@@ -359,7 +406,7 @@ func init() {
 	}
 	DockerClient = docker
 	// TODO 需要用docker时候，将下面开启
-	//go initImagesAndContainer()
+	go initImagesAndContainer()
 }
 func connectDocker() (cli *client.Client, err error) {
 	dockerConfig := utils.Config.SandboxMachine

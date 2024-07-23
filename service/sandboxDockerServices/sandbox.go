@@ -238,3 +238,14 @@ func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) 
 	executeMessages := getOutputMessage(executeMessageArrayList)
 	return executeMessages
 }
+
+// 避免出现意外导致的容器中没有清理掉文件和删除用户，直接把容器删掉再新建
+func (sandbox *SandBox) ResetCodeSandbox() {
+	// 先删除
+	destroyAllContainer()
+	// TODO 去掉
+	time.Sleep(60 * time.Second)
+	list := utilsType.Config.DockerInfoList
+	// 再重新初始化
+	initContainer(&list)
+}

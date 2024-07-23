@@ -85,6 +85,7 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	if byLanguage.Language == "" {
 		return global.LANGUAGE_NOT_SURPPORT_ERROR, nil
 	}
+	// 每个请求都新建一个服务变量，防止并发下 DockerInfo 变量冲突
 	box := sandboxDockerServices.SandBox{
 		DockerInfo: byLanguage,
 	}

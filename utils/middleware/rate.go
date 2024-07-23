@@ -41,7 +41,7 @@ func LoginRateMiddleware() gin.HandlerFunc {
 		// 由于 ShouldBindJSON 只能调用一次，因此后面我们要把它保存起来
 		err := c.ShouldBindJSON(&data)
 		if err != nil {
-			c.JSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
+			c.AbortWithStatusJSON(http.StatusOK, baseRes.ErrByCode(global.PARAMS_ERROR))
 			return
 		}
 

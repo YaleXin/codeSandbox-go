@@ -49,18 +49,19 @@ type SandboxMachine struct {
 	Port string `yaml:"Port"`
 }
 type Server struct {
-	AppMode           string   `yaml:"AppMode"`
-	Host              string   `yaml:"Host"`
-	Port              string   `yaml:"Port"`
-	JwtKey            string   `yaml:"JwtKey"`
-	JwtExpireTime     int      `yaml:"JwtExpireTime"`
-	CaptchaKey        string   `yaml:"CaptchaKey"`
-	RegisterUrlKey    string   `yaml:"RegisterUrlKey"`
-	CaptchaExpireTime int      `yaml:"CaptchaExpireTime"`
-	Database          Database `yaml:"Database"`
-	Oss               Oss      `yaml:"Oss"`
-	Email             Email    `yaml:"Email"`
-	Rate              Rate     `yaml:"Rate"`
+	AppMode           string      `yaml:"AppMode"`
+	Host              string      `yaml:"Host"`
+	Port              string      `yaml:"Port"`
+	JwtKey            string      `yaml:"JwtKey"`
+	JwtExpireTime     int         `yaml:"JwtExpireTime"`
+	CaptchaKey        string      `yaml:"CaptchaKey"`
+	RegisterUrlKey    string      `yaml:"RegisterUrlKey"`
+	CaptchaExpireTime int         `yaml:"CaptchaExpireTime"`
+	Database          Database    `yaml:"Database"`
+	Oss               Oss         `yaml:"Oss"`
+	Email             Email       `yaml:"Email"`
+	Rate              Rate        `yaml:"Rate"`
+	Maintenance       Maintenance `yaml:"Maintenance"`
 }
 type Database struct {
 	Type     string `yaml:"Type"`
@@ -113,4 +114,10 @@ type Rate struct {
 	ExecuteCodeTime         int64 `yaml:"ExecuteCodeTime"`
 	ProgramExecuteCodeCount int64 `yaml:"ProgramExecuteCodeCount"`
 	ProgramExecuteCodeTime  int64 `yaml:"ProgramExecuteCodeTime"`
+}
+
+type Maintenance struct {
+	StartTime   string `yaml:"StartTime,omitempty"`   // 维护期开始的时间
+	ExecuteTime string `yaml:"ExecuteTime,omitempty"` // 执行维护任务的时间
+	EndTime     string `yaml:"EndTime,omitempty"`     // 维护期结束的时间
 }
