@@ -105,13 +105,6 @@ func generateRegisterUrl(userId uint) string {
 	return global.REGISTER_URL_PREFIX + encodedBytes + "." + md5Str
 }
 
-// sendEmail
-//
-//	@Description:
-//	@param toEmail 收件人地址
-//	@param htmlStr 邮件 html 内容
-//	@param subject 邮件主题
-//	@param bccEnable 是否抄送
 func sendEmail(toEmail, htmlStr, subject string, bccEnable bool) int {
 
 	m := gomail.NewMessage()

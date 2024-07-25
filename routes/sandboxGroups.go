@@ -12,7 +12,7 @@ func SandboxGroup(r *gin.Engine) {
 	router := r.Group("api/v1/")
 	{
 		router.GET("languages", v1.LanguageList)
-
+		router.GET("qas", v1.QuestionAndAnswer)
 	}
 
 	needLogin := r.Group("api/v1")

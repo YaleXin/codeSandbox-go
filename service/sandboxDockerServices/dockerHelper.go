@@ -410,7 +410,6 @@ func init() {
 }
 func connectDocker() (cli *client.Client, err error) {
 	dockerConfig := utils.Config.SandboxMachine
-	// TODO 部署时，换用另一种方式初始化
 	if utils.Config.Server.AppMode == global.APP_MODE_DEV {
 		cli, err = client.NewClientWithOpts(client.WithAPIVersionNegotiation(), client.WithHost(fmt.Sprintf("tcp://%v:%v", dockerConfig.Host, dockerConfig.Port)))
 		if err != nil {

@@ -243,8 +243,6 @@ func (sandbox *SandBox) ExecuteCode(executeCodeRequest *dto.ExecuteCodeRequest) 
 func (sandbox *SandBox) ResetCodeSandbox() {
 	// 先删除
 	destroyAllContainer()
-	// TODO 去掉
-	time.Sleep(60 * time.Second)
 	list := utilsType.Config.DockerInfoList
 	// 再重新初始化
 	initContainer(&list)

@@ -211,6 +211,15 @@ definitions:
         description: 总数据数目
         type: integer
     type: object
+  vo.QuestionAndAnswer:
+    properties:
+      answer:
+        type: string
+      id:
+        type: integer
+      question:
+        type: string
+    type: object
   vo.UserDetailVO:
     properties:
       audit:
@@ -579,6 +588,36 @@ paths:
       summary: 获取支持的语言列表
       tags:
       - Languages
+  /api/v1/qas:
+    get:
+      consumes:
+      - application/json
+      description: 获取问答列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            allOf:
+            - $ref: '#/definitions/responses.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/vo.QuestionAndAnswer'
+                  type: array
+              type: object
+        "400":
+          description: 错误响应
+          schema:
+            $ref: '#/definitions/responses.Response'
+        "500":
+          description: 系统内部错误
+          schema:
+            $ref: '#/definitions/responses.Response'
+      summary: 获取问答列表
+      tags:
+      - QuestionAndAnswer
   /api/v1/user/changePwd:
     put:
       consumes:

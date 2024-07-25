@@ -49,19 +49,20 @@ type SandboxMachine struct {
 	Port string `yaml:"Port"`
 }
 type Server struct {
-	AppMode           string      `yaml:"AppMode"`
-	Host              string      `yaml:"Host"`
-	Port              string      `yaml:"Port"`
-	JwtKey            string      `yaml:"JwtKey"`
-	JwtExpireTime     int         `yaml:"JwtExpireTime"`
-	CaptchaKey        string      `yaml:"CaptchaKey"`
-	RegisterUrlKey    string      `yaml:"RegisterUrlKey"`
-	CaptchaExpireTime int         `yaml:"CaptchaExpireTime"`
-	Database          Database    `yaml:"Database"`
-	Oss               Oss         `yaml:"Oss"`
-	Email             Email       `yaml:"Email"`
-	Rate              Rate        `yaml:"Rate"`
-	Maintenance       Maintenance `yaml:"Maintenance"`
+	AppMode                  string      `yaml:"AppMode"`
+	Host                     string      `yaml:"Host"`
+	Port                     string      `yaml:"Port"`
+	AccessControlAllowOrigin string      `yaml:"AccessControlAllowOrigin"`
+	JwtKey                   string      `yaml:"JwtKey"`
+	JwtExpireTime            int         `yaml:"JwtExpireTime"`
+	CaptchaKey               string      `yaml:"CaptchaKey"`
+	RegisterUrlKey           string      `yaml:"RegisterUrlKey"`
+	CaptchaExpireTime        int         `yaml:"CaptchaExpireTime"`
+	Database                 Database    `yaml:"Database"`
+	Oss                      Oss         `yaml:"Oss"`
+	Email                    Email       `yaml:"Email"`
+	Rate                     Rate        `yaml:"Rate"`
+	Maintenance              Maintenance `yaml:"Maintenance"`
 }
 type Database struct {
 	Type     string `yaml:"Type"`

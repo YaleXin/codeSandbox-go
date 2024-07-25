@@ -2,7 +2,9 @@ package api_v1
 
 import (
 	baseRes "codeSandbox/responses"
+	"codeSandbox/service/questionAndAnswerServices"
 	sandboxService "codeSandbox/service/sandboxServices"
+	"codeSandbox/utils/global"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -23,4 +25,24 @@ func LanguageList(c *gin.Context) {
 	languages := service.GetSupportLanguages()
 	log.Debug("languages = ", languages)
 	c.JSON(http.StatusOK, baseRes.OK.WithData(languages))
+}
+
+// QuestionAndAnswer
+// @Summary 获取问答列表
+// @Description 获取问答列表
+// @Tags QuestionAndAnswer
+// @Accept json
+// @Produce json
+// @Success 200 {object} responses.Response{data=[]vo.QuestionAndAnswer} "成功响应"
+// @Failure 400 {object} responses.Response "错误响应"
+// @Failure 500 {object} responses.Response "系统内部错误"
+// @Router /api/v1/qas [get]
+func QuestionAndAnswer(c *gin.Context) {
+	instance := &questionAndAnswerServices.QuestionAndAnswerServiceInstance
+	code, qas := instance.GetAllQuestionAndAnswers()
+	if code != global.SUCCESS {
+		c.JSON(http.StatusOK, baseRes.ErrByCode(code))
+	} else {
+		c.JSON(http.StatusOK, baseRes.OK.WithData(qas))
+	}
 }

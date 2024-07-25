@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type User struct {
 	gorm.Model
 	Username     string `gorm:"index;type:varchar(40);not null;comment:用户名" json:"username"` // 用户名
-	Email        string `gorm:"index;type:varchar(20);not null;comment:邮箱" json:"email"`     // 邮箱
+	Email        string `gorm:"index;type:varchar(40);not null;comment:邮箱" json:"email"`     // 邮箱
 	Password     string `gorm:"type:varchar(100);not null;comment:密码" json:"password"`       // 密码
 	Salt         string `gorm:"type:varchar(20);not null;comment:加密盐" json:"salt"`           // 加密盐
 	Role         int    `gorm:"type:int;comment:权限" json:"role"`                             // 权限 @global.ADMIN_USER_ROLE :管理员 , @global.NORMAL_USER_ROLE : 普通用户 （值越低，权限越高）

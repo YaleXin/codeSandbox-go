@@ -24,7 +24,7 @@ func LogFileCut(fileName string) *rotatelogs.RotateLogs {
 	logier, err := rotatelogs.New(
 		// 切割后日志文件名称
 		fileName,
-		rotatelogs.WithMaxAge(30*24*time.Hour),    // 文件最大保存时间
+		rotatelogs.WithMaxAge(12*30*24*time.Hour), // 文件最大保存时间
 		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
 	)
 
@@ -53,7 +53,7 @@ func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 
-	timestamp := entry.Time.Format("2024-06-18 15:04:05.000")
+	timestamp := entry.Time.Format("2006-01-02 15:04:05.000")
 	var newLog string
 
 	//HasCaller()为true才会有调用信息
