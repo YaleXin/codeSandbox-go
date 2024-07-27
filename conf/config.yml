@@ -78,8 +78,8 @@ DockerInfoList:
     Filename: Main.go
     CompileCmd: "go build Main.go"
     RunCmd: "./Main"
-  - Language: Java-8
-    ImageName: java:8
+  - Language: Java-11
+    ImageName: my-java11-app:latest
     ContainerCount: 2
     Filename: Main.java
     CompileCmd: "javac Main.java -encoding utf-8"

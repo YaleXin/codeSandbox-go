@@ -129,6 +129,7 @@ func containerRunCmd(execId string, inputStr string, msgChannel chan dto.Execute
 			log.Warnf("Recovered from panic at containerRunCmd: %v", r)
 		}
 	}()
+	log.Infof("executeMessage:%+v", executeMessage)
 	msgChannel <- executeMessage
 }
 

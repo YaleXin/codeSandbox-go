@@ -1,0 +1,7 @@
+# 使用Debian 11作为基础镜像
+FROM debian:11
+
+# 更新包列表并安装OpenJDK 11
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jdk && \
+    apt-get clean;
