@@ -150,6 +150,7 @@ func runCmdByContainer(containerId string, cmd []string, workDir string, input s
 		Tty:          false,
 		Cmd:          cmd,
 	}
+	log.Infof("cmd : %v", cmd)
 	if user != "" {
 		execConfig.User = user
 	}

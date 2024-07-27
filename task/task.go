@@ -50,8 +50,9 @@ func checkTime() bool {
 func InitTask() *cron.Cron {
 	log.Infof("task init....")
 	if checkTime() {
+		loc, _ := time.LoadLocation("Asia/Shanghai")
 		// 创建一个新的 Cron 实例
-		c := cron.New(cron.WithSeconds())
+		c := cron.New(cron.WithSeconds(), cron.WithLocation(loc))
 		// TASK_TIME 形如 01:02:03
 		split := strings.Split(TASK_TIME, ":")
 		// 添加一个作业 ：秒 分 时

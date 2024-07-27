@@ -1,0 +1,11 @@
+# 使用 Alpine 作为基础镜像
+FROM alpine:3.16
+
+# 更新包索引
+RUN apk update
+
+# 安装 OpenJDK 8
+RUN apk add --update openjdk8-jre
+
+# 清理缓存
+RUN rm -rf /var/cache/apk/*

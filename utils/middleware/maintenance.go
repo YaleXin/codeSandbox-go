@@ -19,17 +19,17 @@ var END_TIME = utils.Config.Server.Maintenance.EndTime
 func MaintenanceMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		nowTime := time.Now()
-		nowTimeStr := nowTime.Format("2006-01-02 15:05:05")
+		nowTimeStr := nowTime.Format("2006-01-02 15:04:05")
 		// 将日期和时间拼接在一起
 		startTimeStr := nowTimeStr[:len("2006-01-02 ")] + START_TIME
 		endTimeStr := nowTimeStr[:len("2006-01-02 ")] + END_TIME
 		// 转为时间变量
-		startTime, err := time.Parse("2006-01-02 15:05:05", startTimeStr)
+		startTime, err := time.ParseInLocation("2006-01-02 15:04:05", startTimeStr, time.Local)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, baseRes.ErrByCode(global.SYSTEM_ERROR))
 			return
 		}
-		endTime, err := time.Parse("2006-01-02 15:05:05", endTimeStr)
+		endTime, err := time.ParseInLocation("2006-01-02 15:04:05", endTimeStr, time.Local)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusOK, baseRes.ErrByCode(global.SYSTEM_ERROR))
 			return

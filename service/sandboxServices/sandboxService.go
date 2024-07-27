@@ -14,6 +14,7 @@ import (
 	"codeSandbox/utils/tool"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 type SandboxService struct{}
@@ -79,6 +80,7 @@ func (sandboxService *SandboxService) ExecuteCode(c *gin.Context, executeCodeReq
 	if len(executeCodeRequest.InputList) > global.INPUT_LIST_MAX_LEN {
 		return global.TOO_MANY_INPUT_ERROR, nil
 	}
+	log.Infof("executeCodeRequest = %+v", executeCodeRequest)
 	// 找出该语言对应的 dockerinfo 对象
 	language := executeCodeRequest.Language
 	byLanguage := getDockerInfoByLanguage(language)
